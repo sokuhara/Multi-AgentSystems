@@ -1,0 +1,1524 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>マルチエージェント特論 第1回 ハイブリッド版（学部・大学院）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#E4E8EE; --paper:#FFFFFF; --ink:#151B24; --muted:#586372; --line:#D6DBE2; --soft:#F3F5F8;
+  --acc:#2F45C4; --accs:#E4E8FB; --eq:#B8325F; --eqs:#F8E1EA; --ok:#0B7F7B; --oks:#DCF0EF; --amb:#B87A00; --ambs:#FAEFD3;
+  --band:#1A2233; --bandInk:#EEF2F7; --ant:#3A2A22; --food:#E8A33D; --ground:#EFE5D2;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B0F15; --paper:#141A23; --ink:#E6EBF2; --muted:#9AA5B4; --line:#29323F; --soft:#1A222D;
+    --acc:#8C9BF6; --accs:#222947; --eq:#EE6B98; --eqs:#3B1A28; --ok:#3CC2BD; --oks:#133634; --amb:#F0B43A; --ambs:#382D12;
+    --band:#0E1420; --bandInk:#EEF2F7; --ant:#EDE0CF; --food:#F2B632; --ground:#2A2620;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B0F15; --paper:#141A23; --ink:#E6EBF2; --muted:#9AA5B4; --line:#29323F; --soft:#1A222D;
+  --acc:#8C9BF6; --accs:#222947; --eq:#EE6B98; --eqs:#3B1A28; --ok:#3CC2BD; --oks:#133634; --amb:#F0B43A; --ambs:#382D12;
+  --band:#0E1420; --bandInk:#EEF2F7; --ant:#EDE0CF; --food:#F2B632; --ground:#2A2620;
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+.app{display:flex;flex-direction:column;height:100%}
+.viewport{position:relative;flex:1;overflow:hidden}
+.stage{position:absolute;width:1280px;height:720px;transform-origin:0 0;background:var(--paper);box-shadow:0 2px 24px rgba(15,20,30,.14);border-radius:8px;overflow:hidden}
+.slide{position:absolute;inset:0;padding:50px 80px 54px;visibility:hidden;opacity:0;transition:opacity .2s ease}
+.slide.active{visibility:visible;opacity:1}
+@media (prefers-reduced-motion: reduce){.slide{transition:none}}
+
+.sec{font-size:16px;color:var(--muted);margin:0 0 10px;font-weight:500;display:flex;align-items:center;gap:10px}
+.adv-badge{display:none;font-size:14px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--eq);color:#fff}
+.slide.adv .adv-badge{display:inline-block}
+h1{font-size:56px;line-height:1.3;font-weight:900;margin:0}
+h2{font-size:38px;line-height:1.3;font-weight:900;margin:0 0 24px}
+h3{margin:0}
+p{margin:0}
+.lead{font-size:25px;line-height:1.7}
+.body{font-size:21px;line-height:1.75}
+.small{font-size:17px;line-height:1.6}
+.muted{color:var(--muted)}
+.num{position:absolute;right:36px;bottom:22px;font-size:14px;color:var(--muted)}
+.cite{font-size:14.5px;color:var(--muted);position:absolute;left:80px;bottom:22px;right:150px;line-height:1.5}
+b{font-weight:700}
+.m{font-family:"STIX Two Text","Times New Roman",serif;font-size:1.08em;white-space:nowrap}
+.m i,.formula i{font-style:italic}
+.formula{font-family:"STIX Two Text","Times New Roman",serif;font-size:26px;padding:14px 22px;background:var(--soft);border-left:5px solid var(--acc);margin:6px 0 16px;line-height:1.6}
+.box{padding:16px 22px;background:var(--accs);font-size:20px;line-height:1.65;margin-top:18px}
+.box.eq{background:var(--eqs)} .box.amb{background:var(--ambs)} .box.ok{background:var(--oks)}
+.grad{margin-top:16px;padding:12px 18px;border:2px dashed var(--eq);font-size:17.5px;line-height:1.6}
+.grad b.g{color:var(--eq)}
+
+button{font-family:inherit;cursor:pointer}
+.btn{font-size:17px;font-weight:700;padding:9px 16px;border-radius:6px;border:2px solid var(--ink);background:transparent;color:var(--ink)}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.btn:focus-visible,.cell:focus-visible,.qcard:focus-visible,.nav button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:3px}
+
+/* cover / divider */
+.cover,.divider{background:var(--band);color:var(--bandInk);display:flex;flex-direction:column;justify-content:center}
+.cover .course{font-size:21px;opacity:.75;margin-bottom:22px}
+.cover .sub{font-size:25px;opacity:.85;margin-top:24px;line-height:1.6;max-width:640px}
+.cover .meta{position:absolute;left:80px;bottom:52px;font-size:17px;opacity:.65}
+.cover svg{position:absolute;right:60px;top:90px;width:420px;height:540px}
+.divider .part{font-size:22px;opacity:.7;margin-bottom:14px}
+.divider h2{font-size:52px;margin:0 0 20px;color:var(--bandInk)}
+.divider p{font-size:24px;opacity:.82;line-height:1.6;max-width:900px}
+.cover .num,.divider .num{color:var(--bandInk);opacity:.5}
+
+.q-wrap{display:flex;flex-direction:column;justify-content:center;height:100%;max-width:1040px}
+.q{font-size:48px;font-weight:900;line-height:1.5}
+.q-note{font-size:23px;color:var(--muted);margin-top:26px;line-height:1.7}
+
+.agenda{width:100%;border-collapse:collapse}
+.agenda td{font-size:20px;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.agenda td.t{width:120px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.agenda td.p{width:90px;font-weight:700;color:var(--acc)}
+.agenda td.d{color:var(--muted);font-size:17px}
+
+table.t1{border-collapse:collapse;width:100%}
+.t1 th,.t1 td{font-size:18.5px;line-height:1.5;padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+.t1 thead th{border-bottom:2px solid var(--ink);font-weight:700}
+.t1 tbody th{font-weight:700;white-space:nowrap}
+.t1 .hl{background:var(--accs)}
+
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+.cols3{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+.card{border-top:4px solid var(--c,var(--acc));padding-top:14px}
+.card h3{font-size:24px;font-weight:900;margin-bottom:8px}
+.card p{font-size:19px;line-height:1.65}
+.card .ex{margin-top:10px;font-size:17px;color:var(--muted);line-height:1.55}
+
+ul.dots{list-style:none;padding:0;margin:0}
+ul.dots li{font-size:21px;line-height:1.6;padding:8px 0 8px 26px;position:relative}
+ul.dots li::before{content:"";position:absolute;left:4px;top:20px;width:9px;height:9px;border-radius:50%;background:var(--c,var(--acc))}
+
+.goals{counter-reset:g;list-style:none;padding:0;margin:0}
+.goals li{counter-increment:g;display:grid;grid-template-columns:56px 1fr auto;align-items:baseline;font-size:24px;line-height:1.55;padding:14px 0;border-bottom:1px solid var(--line)}
+.goals li::before{content:counter(g);font-size:34px;font-weight:900;color:var(--acc)}
+.goals .lv{font-size:15px;font-weight:700;padding:2px 10px;border-radius:999px;background:var(--oks);color:var(--ok)}
+.goals .lv.g{background:var(--eqs);color:var(--eq)}
+
+/* quiz */
+.quiz{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.qcard{border:2px solid var(--line);background:var(--soft);border-radius:10px;padding:18px 16px;min-height:300px;text-align:left;color:var(--ink);display:flex;flex-direction:column}
+.qcard .icon{font-size:52px;line-height:1;margin-bottom:10px}
+.qcard .name{font-size:23px;font-weight:900;margin-bottom:8px}
+.qcard .hint{font-size:17px;color:var(--muted);margin-top:auto}
+.qcard .ans{display:none;margin-top:auto}
+.qcard.open{border-color:var(--cc);background:var(--cb)}
+.qcard.open .hint{display:none}
+.qcard.open .ans{display:block}
+.qcard .ans b{display:block;font-size:22px;color:var(--cc);margin-bottom:4px}
+.qcard .ans span{font-size:17px;line-height:1.55}
+
+/* sims */
+.sim2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.sim2 .panel{background:var(--soft);padding:12px 16px 10px;border-radius:8px}
+.sim2 h3{font-size:21px;font-weight:900;margin-bottom:2px}
+.sim2 svg{width:100%;height:auto;display:block}
+.sim2 .res{font-size:19px;font-weight:700;min-height:30px;text-align:center}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap}
+.btnrow.c{justify-content:center;margin-top:14px}
+
+.game{display:grid;grid-template-columns:auto 1fr;gap:36px;align-items:start}
+.gt{border-collapse:separate;border-spacing:8px}
+.gt th{font-size:19px;padding:4px 8px;text-align:center}
+.gt .rh{text-align:right}
+.cell{width:210px;height:112px;border:2px dashed var(--line);background:var(--soft);font-size:18px;line-height:1.5;color:var(--muted);text-align:center;padding:8px;border-radius:6px}
+.cell .r{display:none;color:var(--ink)}
+.cell .r strong{display:block;font-size:22px}
+.cell.open{border-style:solid;border-color:var(--cc);background:var(--cb)}
+.cell.open .h{display:none}
+.cell.open .r{display:block}
+.pa{color:var(--acc)} .pb{color:var(--eq)}
+
+.route{display:grid;grid-template-columns:580px 1fr;gap:36px;align-items:start}
+.route svg{width:580px;height:auto;display:block}
+.ctrl label{display:block;font-size:21px;margin-bottom:8px}
+.ctrl input[type=range]{width:100%;accent-color:var(--eq);height:28px}
+.bars{margin-top:16px}
+.bar{display:grid;grid-template-columns:110px 1fr 84px;align-items:center;gap:10px;margin-bottom:10px;font-size:19px}
+.bar .track{height:22px;background:var(--soft);border-radius:4px;overflow:hidden}
+.bar .fill{height:100%;transition:width .15s}
+.bar .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.bigtime{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;padding:12px 16px;background:var(--soft)}
+.bigtime .n{font-size:38px;font-weight:900;font-variant-numeric:tabular-nums}
+.bnote{font-size:18px;line-height:1.6;margin-top:10px;min-height:56px}
+.flows table{border-collapse:collapse;width:100%}
+.flows td,.flows th{font-size:17px;padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;font-variant-numeric:tabular-nums}
+.flows th{border-bottom:2px solid var(--ink)}
+
+.ants{display:grid;grid-template-columns:560px 1fr;gap:40px;align-items:center}
+.ants svg{width:560px;height:400px;display:block;border-radius:10px}
+
+/* timeline */
+.tl{position:relative;margin-top:10px}
+.tl::before{content:"";position:absolute;left:0;right:0;top:38px;height:3px;background:var(--ink)}
+.tl-row{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;position:relative}
+.tl-row > div{padding-top:58px;position:relative}
+.tl-row > div::before{content:"";position:absolute;top:30px;left:0;width:18px;height:18px;border-radius:50%;background:var(--paper);border:4px solid var(--c,var(--acc))}
+.tl-row .y{position:absolute;top:0;left:0;font-size:18px;font-weight:900}
+.tl-row h3{font-size:18px;font-weight:900;margin-bottom:6px;line-height:1.4}
+.tl-row p{font-size:15.5px;line-height:1.55;color:var(--muted)}
+
+/* map */
+.map{display:flex;gap:12px;margin-top:6px}
+.map > div{flex:1;padding:16px 12px 18px;border-top:8px solid var(--c);background:var(--soft)}
+.map .wk{font-size:15px;font-weight:700;color:var(--muted)}
+.map h3{font-size:21px;font-weight:900;margin:6px 0 8px;line-height:1.35}
+.map p{font-size:15.5px;line-height:1.55;color:var(--muted)}
+.map .now{outline:3px solid var(--ink);outline-offset:-3px}
+
+.ws{border-collapse:collapse;width:100%}
+.ws th,.ws td{font-size:17px;line-height:1.5;padding:9px 12px;border:1px solid var(--line);text-align:left;vertical-align:top}
+.ws thead th{background:var(--soft)}
+.ws tbody th{width:160px;background:var(--soft);font-weight:700}
+.ws td.ex{background:var(--ambs)}
+.ws td.blank{height:58px}
+
+.refs{font-size:15px;line-height:1.55;padding-left:22px;margin:0;columns:2;column-gap:40px}
+.refs li{margin-bottom:7px;break-inside:avoid}
+
+.notes{display:none;position:absolute;left:0;right:0;bottom:0;max-height:40%;overflow:auto;background:var(--band);color:var(--bandInk);font-size:15px;line-height:1.6;padding:12px 20px;z-index:5}
+.show-notes .notes{display:block}
+
+.nav{min-height:54px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:15px;color:var(--muted);flex-wrap:wrap;padding:4px 8px}
+.nav button{height:38px;min-width:44px;padding:0 12px;border-radius:7px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font-size:15px;line-height:1}
+.nav .arrow{font-size:20px}
+.nav button:disabled{opacity:.35;cursor:default}
+.nav button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.nav .count,.nav .clock{min-width:64px;text-align:center;font-variant-numeric:tabular-nums}
+.progress{height:4px;background:var(--line)}
+.progress span{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
+
+/* experience components */
+:root{--floor:#F4F7FA;--shelf:#9AA6B6;--exit:#FCEAB8}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--floor:#1B2531;--shelf:#4A5566;--exit:#4A3B12}}
+:root[data-theme="dark"]{--floor:#1B2531;--shelf:#4A5566;--exit:#4A3B12}
+.hidden{display:none !important}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.picks{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:30px}
+.pick{border:2px solid var(--line);background:var(--soft);border-radius:10px;padding:18px 14px;font-size:22px;font-weight:700;color:var(--ink);font-family:inherit;cursor:pointer}
+.pick.sel{border-color:var(--acc);background:var(--accs)}
+.race{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.race .panel{background:var(--soft);border-radius:10px;padding:10px 14px}
+.race h3{font-size:21px;font-weight:900;margin-bottom:6px}
+.race svg{width:100%;height:auto;display:block;border-radius:8px}
+.stat{display:flex;justify-content:space-between;align-items:baseline;font-size:18px;margin-top:6px}
+.stat .n{font-size:28px;font-weight:900;font-variant-numeric:tabular-nums}
+.single{display:grid;gap:26px;align-items:start}
+.counter{background:var(--soft);border-radius:10px;padding:10px 14px;margin-bottom:10px}
+.counter .k{font-size:16px;color:var(--muted)}
+.counter .n{font-size:34px;font-weight:900;font-variant-numeric:tabular-nums}
+.hist{border-collapse:collapse;width:100%;margin-top:10px}
+.hist th,.hist td{font-size:16px;padding:5px 8px;border-bottom:1px solid var(--line);text-align:left;font-variant-numeric:tabular-nums}
+.hist th{border-bottom:2px solid var(--ink)}
+.hist tr.best td{background:var(--oks);font-weight:700}
+.tog{display:flex;flex-direction:column;gap:9px;margin-bottom:12px}
+.tog .btn{text-align:left}
+.ideas{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.idea{border:2px solid var(--line);background:var(--soft);border-radius:10px;padding:16px 14px;min-height:230px;text-align:left;color:var(--ink);display:flex;flex-direction:column;font-family:inherit;cursor:pointer}
+.idea .t{font-size:23px;font-weight:900;margin-bottom:6px}
+.idea .d{font-size:18px;line-height:1.55;color:var(--muted)}
+.idea .ans{display:none;margin-top:auto;font-size:17px;line-height:1.55;padding-top:10px;border-top:2px dashed var(--line)}
+.idea.open{border-color:var(--ok);background:var(--oks)}
+.idea.open .ans{display:block}
+.inp{display:flex;align-items:center;gap:10px;font-size:20px;margin-bottom:10px}
+.inp input{font-family:inherit;font-size:22px;font-weight:700;width:84px;padding:5px 8px;border:2px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);text-align:center}
+.inp .pm{width:42px;height:42px;border-radius:50%;border:2px solid var(--ink);background:transparent;color:var(--ink);font-size:22px;font-weight:700;cursor:pointer}
+.res3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.res3 > div{background:var(--soft);border-radius:10px;padding:10px 12px}
+.res3 .k{font-size:15px;color:var(--muted)}
+.res3 .n{font-size:30px;font-weight:900;font-variant-numeric:tabular-nums}
+.pick:focus-visible,.idea:focus-visible,.inp input:focus-visible,.inp .pm:focus-visible{outline:3px solid var(--acc);outline-offset:3px}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="progress"><span id="bar"></span></div>
+<div class="viewport" id="vp">
+<div class="stage" id="stage">
+
+<section class="slide cover" data-note="画面下の「表示」で、学部のみ（補足スライドを飛ばす）と学部＋院を切り替えられる。補足は最後にまとめてある。">
+  <div class="course">マルチエージェント特論　第1回</div>
+  <h1>マルチエージェント<br>システムの概要</h1>
+  <p class="sub">ロボットを10台集めたら、最強のチームになるか。<br>複数のエージェントがいると何が変わり、何を設計・分析するのか</p>
+  <svg viewBox="0 0 420 540" aria-hidden="true" id="coverNet"></svg>
+  <p class="meta">学部・大学院 共通講義　90分</p>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="前半は倉庫ロボットの例を少しずつ変えながら進む。1台 → 同じ倉庫に10台 → 別会社の配送車。各場面で、予想 → 実際に動かす → なぜかを考える、の順に進める。">
+  <p class="sec">本日の構成</p>
+  <h2>90分の流れ</h2>
+  <table class="agenda">
+    <tr><td class="t">0〜7分</td><td class="p">導入</td><td>ロボットが1台から10台になったら、何倍速くなる？</td><td class="d">予想と競争</td></tr>
+    <tr><td class="t">7〜15分</td><td class="p">1</td><td>そもそもエージェントとは？</td><td class="d">1台の倉庫ロボット</td></tr>
+    <tr><td class="t">15〜27分</td><td class="p">2</td><td>複数になると、なぜ難しい？</td><td class="d">ゆっくり再生、通路の取り合い</td></tr>
+    <tr><td class="t">27〜45分</td><td class="p">3</td><td>複数で取り組むと、何ができる？</td><td class="d">作戦ラボ、故障時の再割当て</td></tr>
+    <tr><td class="t">45〜60分</td><td class="p">4</td><td>みんなが同じ目的とは限らないと、どうなる？</td><td class="d">クラスで道を選ぶ実験</td></tr>
+    <tr><td class="t">60〜68分</td><td class="p">5</td><td>MAS研究では、何を作り、何を調べる？</td><td class="d">振る舞い、ルール、評価</td></tr>
+    <tr><td class="t">68〜85分</td><td class="p">演習</td><td>身近な問題をMASとして捉えられる？</td><td class="d">6つの観点で書く、共有</td></tr>
+    <tr><td class="t">85〜90分</td><td class="p">まとめ</td><td>今日の話は、今後の授業にどうつながる？</td><td class="d">課題</td></tr>
+  </table>
+  <span class="num"></span>
+</section>
+
+<section class="slide">
+  <p class="sec">今日のゴール</p>
+  <h2>今日の到達点</h2>
+  <div class="box" style="margin-top:0;font-size:25px;line-height:1.6">自分の題材について、<b>誰が何を判断し、互いにどう影響するか</b>を説明できる。</div>
+  <ol class="goals" style="margin-top:16px">
+    <li>エージェントを「知覚・判断・行動」で説明できる<span class="lv">学部</span></li>
+    <li>複数になると何が難しくなり、協調で何ができるかを説明できる<span class="lv">学部</span></li>
+    <li>目的が共通の場合と異なる場合で、必要な調整の違いを説明できる<span class="lv">学部</span></li>
+    <li>「目的が共通」という仮定の妥当性と、中央で決める場合との比較を論じられる<span class="lv g">院</span></li>
+  </ol>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="0〜7分。挙手で予想を取り、多かった選択肢をクリックして印を付けてから次へ。">
+  <div class="q-wrap">
+    <p class="sec">導入　予想する</p>
+    <p class="q">倉庫で荷物を運ぶロボットを、<br>1台から10台に増やすと、<br>何倍速く運び終わるだろう？</p>
+    <div class="picks">
+      <button class="pick" type="button">ほぼ10倍</button>
+      <button class="pick" type="button">5倍くらい</button>
+      <button class="pick" type="button">2倍くらい</button>
+      <button class="pick" type="button">ほとんど変わらない</button>
+    </div>
+  </div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="スタートを押して最後まで見せる。10台の側で、同じ荷物に集まる場面と赤い輪（前がふさがって待っている）を指さす。結果の文は両方が終わってから出る。">
+  <p class="sec">導入　結果を見る</p>
+  <h2>1台と10台で、16個の荷物を出荷口へ運ぶ</h2>
+  <div class="race">
+    <div class="panel"><h3>1台</h3><svg id="raceL" viewBox="0 0 600 400"></svg><div class="stat"><span>かかった時間</span><span class="n" id="raceLt">0</span></div></div>
+    <div class="panel"><h3>10台</h3><svg id="raceR" viewBox="0 0 600 400"></svg><div class="stat"><span>かかった時間</span><span class="n" id="raceRt">0</span></div></div>
+  </div>
+  <div class="row" style="margin-top:12px">
+    <button class="btn" type="button" id="raceGo">スタート</button>
+    <button class="btn" type="button" id="raceFast" aria-pressed="false">早送り</button>
+    <p class="body" id="raceMsg" style="margin-left:8px" aria-live="polite"></p>
+  </div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="まず学生に「なぜ2倍止まりか」を説明させ、出た答えを左右に分けて整理する。右側の「調整の課題」が今日の授業全体のテーマ。">
+  <p class="sec">導入</p>
+  <h2>なぜ10倍にならないのか：能力も、調整の課題も増える</h2>
+  <div class="cols2">
+    <div class="card" style="--c:var(--ok)">
+      <h3>増える能力</h3>
+      <ul class="dots" style="--c:var(--ok)">
+        <li>同時にたくさんの荷物を運べる</li>
+        <li>離れた場所で並行して作業できる</li>
+        <li>1台が故障しても、残りで作業を続けられる</li>
+      </ul>
+    </div>
+    <div class="card" style="--c:var(--eq)">
+      <h3>増える調整の課題（さっきの10台で起きていたこと）</h3>
+      <ul class="dots" style="--c:var(--eq)">
+        <li>2台が同じ荷物を取りに行く（仕事の重複）</li>
+        <li>狭い通路で向かい合って止まる（衝突、待ち）</li>
+        <li>誰がどの仕事をするのか、決める必要がある</li>
+      </ul>
+    </div>
+  </div>
+  <div class="box">台数を増やすと、<b>能力と調整の課題が両方増える</b>。この授業では、その調整を扱う。まず、1台のロボットから見ていく。</div>
+  <span class="num"></span>
+</section>
+
+<section class="slide divider">
+  <p class="part">1　7〜15分</p>
+  <h2>そもそもエージェントとは？</h2>
+  <p>10台の話の前に、1台の倉庫ロボットが何を見て、何を目指し、何をしているかを確認する。</p>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="学部生には図と右の表で十分。院生には下の写像の定義を補足する。">
+  <p class="sec">1　エージェント</p>
+  <h2>1台の倉庫ロボットを、エージェントとして見る</h2>
+  <div class="cols2" style="align-items:center;grid-template-columns:400px 1fr">
+    <svg viewBox="0 0 500 400" style="width:400px;height:320px" role="img" aria-label="ロボットが倉庫を知覚し、判断し、行動するループ">
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink)"/></marker></defs>
+      <circle cx="250" cy="105" r="86" fill="var(--accs)" stroke="var(--acc)" stroke-width="4"/>
+      <text x="250" y="102" text-anchor="middle" font-size="46">🤖</text>
+      <text x="250" y="152" text-anchor="middle" font-size="21" font-weight="700" fill="var(--ink)">判断する</text>
+      <rect x="30" y="290" width="440" height="100" rx="6" fill="var(--soft)" stroke="var(--line)" stroke-width="2"/>
+      <text x="250" y="334" text-anchor="middle" font-size="25" font-weight="700" fill="var(--ink)">環境：倉庫</text>
+      <text x="250" y="366" text-anchor="middle" font-size="18" fill="var(--muted)">棚、荷物、通路、出荷口、注文</text>
+      <path d="M100,285 C75,215 110,160 165,132" fill="none" stroke="var(--ink)" stroke-width="3" marker-end="url(#ar)"/>
+      <path d="M335,132 C390,160 425,215 400,285" fill="none" stroke="var(--ink)" stroke-width="3" marker-end="url(#ar)"/>
+      <text x="22" y="205" font-size="22" font-weight="700" fill="var(--ok)">知覚</text>
+      <text x="425" y="205" font-size="22" font-weight="700" fill="var(--eq)">行動</text>
+    </svg>
+    <table class="ws">
+      <tbody>
+        <tr><th>何を見る？</th><td>荷物と棚の位置、通路が空いているか、バッテリー残量</td></tr>
+        <tr><th>何を目指す？</th><td>注文された荷物を、できるだけ早く出荷口へ届ける</td></tr>
+        <tr><th>何をする？</th><td>移動する、持ち上げる、運ぶ、充電に戻る</td></tr>
+        <tr><th>何を判断する？</th><td>次にどの荷物を取りに行くか、どの通路を通るか</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="box" style="margin-top:14px"><b>エージェント</b>：環境を知覚し、目標に向けて自分で判断し、行動する主体。ロボット、ソフトウェア、生成AI、人間も、この見方で捉えられる。</div>
+  <div class="grad" style="margin-top:10px"><b class="g">院</b>　機能的には知覚列から行動への写像 <span class="m"><i>f</i> : <i>P</i><sup>*</sup> → <i>A</i></span>（Russell &amp; Norvig）。性質による定義は補足を参照。</div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="時間が押していれば省略してよい。サーモスタットと自動ドアは意見が割れやすい。「何を見る・目指す・判断する」のどこが弱いかで議論させる。">
+  <p class="sec">1　エージェント</p>
+  <h2>確認クイズ：これはエージェント？</h2>
+  <div class="quiz">
+    <button class="qcard" type="button" style="--cc:var(--ok);--cb:var(--oks)"><span class="icon">🤖</span><span class="name">ロボット掃除機</span><span class="hint">クリックで見解</span><span class="ans"><b>エージェント</b><span>障害物やゴミを見て、進む方向を自分で決める</span></span></button>
+    <button class="qcard" type="button" style="--cc:var(--amb);--cb:var(--ambs)"><span class="icon">🌡️</span><span class="name">サーモスタット</span><span class="hint">クリックで見解</span><span class="ans"><b>意見が分かれる</b><span>温度を見て動くが、判断は固定のしきい値だけ</span></span></button>
+    <button class="qcard" type="button" style="--cc:var(--ok);--cb:var(--oks)"><span class="icon">📈</span><span class="name">株の自動売買プログラム</span><span class="hint">クリックで見解</span><span class="ans"><b>エージェント</b><span>市場を見て、利益という目標に向けて売買を決める</span></span></button>
+    <button class="qcard" type="button" style="--cc:var(--amb);--cb:var(--ambs)"><span class="icon">💬</span><span class="name">チャットAI</span><span class="hint">クリックで見解</span><span class="ans"><b>使い方しだい</b><span>質問に答えるだけなら道具に近い。自分で手順を決めてツールを使うならエージェント</span></span></button>
+  </div>
+  <span class="num"></span>
+</section>
+
+<section class="slide divider">
+  <p class="part">2　15〜27分</p>
+  <h2>複数になると、なぜ難しい？</h2>
+  <p style="font-size:21px;opacity:.7;margin-bottom:10px">ここまでは、まず他に判断するロボットがいない場合を考えた。</p>
+  <p>同じ倉庫に同じ会社のロボットが何台もいると、何が起きるのか。さっきの10台を、ゆっくり見直す。</p>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="ゆっくり再生し、同じ荷物に集まる場面と、狭い通路で向かい合って止まる場面で一時停止する。目的は倉庫全体で共通のままであることを念押しする。">
+  <p class="sec">2　相互作用</p>
+  <h2>全員が「一番近い荷物」に向かうと、何が起きる？</h2>
+  <div class="single" style="grid-template-columns:600px 1fr">
+    <svg id="slowSvg" viewBox="0 0 600 400" style="width:600px;height:400px;border-radius:12px"></svg>
+    <div>
+      <div class="box amb" style="margin-top:0">10台に与えたルール：<b>各自が、自分から一番近い荷物に向かう</b></div>
+      <p class="small muted" style="margin:8px 0 10px">目的は倉庫全体の合計時間で、全員共通。ただし各ロボットは、自分の周りの情報だけで判断している。</p>
+      <div class="counter"><div class="k">かかった時間</div><div class="n" id="slowT">0</div></div>
+      <div class="row"><button class="btn" type="button" id="slowGo">ゆっくり再生</button><button class="btn" type="button" id="slowPause">一時停止</button></div>
+      <button class="btn" type="button" data-reveal="slowAns" style="margin-top:12px">起きていたことを見る</button>
+      <div id="slowAns" class="hidden" style="margin-top:10px"><div class="box eq" style="font-size:18px">同じ荷物に何台も向かい、先に取られて引き返す（無駄足 <b id="slowRe">0</b> 回）。狭い通路で向かい合って止まる（待ち <b id="slowWa">0</b> 回）。<br>目的は共通で、一台一台の判断も妥当なのに、チームとしては非効率になる。</div></div>
+    </div>
+  </div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="2台とも同じ会社のロボットなので、目指すのは倉庫全体の合計時間。各自の時間ではない点を最初に確認する。セルを開いて合計を比べさせる。">
+  <p class="sec">2　相互作用</p>
+  <h2>同じ会社の2台：どちらの通路を通る？</h2>
+  <div class="game">
+    <table class="gt">
+      <thead><tr><th></th><th class="pb">B：近い通路</th><th class="pb">B：遠い通路</th></tr></thead>
+      <tbody>
+        <tr><th class="rh pa">A：近い通路</th>
+          <td><button class="cell" type="button" style="--cc:var(--eq);--cb:var(--eqs)"><span class="h">クリック</span><span class="r"><strong>合計 16分</strong>A 8分、B 8分<br>狭い通路で待ち合い</span></button></td>
+          <td><button class="cell" type="button" style="--cc:var(--ok);--cb:var(--oks)"><span class="h">クリック</span><span class="r"><strong>合計 10分</strong>A 4分、B 6分</span></button></td></tr>
+        <tr><th class="rh pa">A：遠い通路</th>
+          <td><button class="cell" type="button" style="--cc:var(--ok);--cb:var(--oks)"><span class="h">クリック</span><span class="r"><strong>合計 10分</strong>A 6分、B 4分</span></button></td>
+          <td><button class="cell" type="button" style="--cc:var(--amb);--cb:var(--ambs)"><span class="h">クリック</span><span class="r"><strong>合計 12分</strong>A 6分、B 6分<br>両方遠回り</span></button></td></tr>
+      </tbody>
+    </table>
+    <div class="body">
+      <p>さっきの詰まりを、2台だけの最小の例で見る。近い通路は1台ずつしか通れない。遠い通路は広いが遠回り。2台とも同じ会社のロボットなので、目指すのは<b>倉庫全体の合計時間</b>を短くすること。</p>
+      <p style="margin-top:12px">倉庫全体としては<b>別々の通路</b>が良い（合計10分）。ただし、<b>どちらが近い通路を使うか</b>を決める必要がある。</p>
+      <div class="box"><b>相互作用</b>：Aが近い通路で4分で済むか8分かかるかは、Bの選択で変わる。自分の行動の結果が、他のエージェントの行動にも左右されること。</div>
+    </div>
+  </div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="3つのキーワードで、1台のロボットとMASの違いを整理する。">
+  <p class="sec">2　MAS</p>
+  <h2>マルチエージェントシステム（MAS）</h2>
+  <p class="lead" style="margin:-6px 0 20px">複数のエージェントが、それぞれ判断し、互いに影響し合うシステム。</p>
+  <div class="cols3">
+    <div class="card" style="--c:var(--ok)"><h3>分散</h3><p>情報が1か所にない。各自が見える範囲だけを知っている。</p><p class="ex">ロボットAは、Bが今どの荷物に向かっているかを知らない（だから同じ荷物に集まった）</p></div>
+    <div class="card" style="--c:var(--amb)"><h3>自律</h3><p>逐一命令されなくても、各自が判断して動く。</p><p class="ex">各ロボットが、次の荷物や通る通路を自分で決める</p></div>
+    <div class="card" style="--c:var(--acc)"><h3>相互作用</h3><p>ある主体の行動が、他の主体の結果に影響する。</p><p class="ex">Aが近い通路に入ると、Bの所要時間が変わる</p></div>
+  </div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="中央で決める方がよい場面もある。どこまで分散させるかも設計の選択肢であることを伝える。">
+  <p class="sec">2　MAS</p>
+  <h2>中央のコンピュータが全部決めればよいのでは？</h2>
+  <table class="t1">
+    <thead><tr><th style="width:170px"></th><th>中央で全部決める</th><th class="hl">各エージェントが決める</th></tr></thead>
+    <tbody>
+      <tr><th>情報</th><td>全台の状態を毎秒集める必要がある</td><td class="hl">各自が見える範囲で判断できる</td></tr>
+      <tr><th>計算</th><td>台数が増えると組合せが急に増える</td><td class="hl">各自の計算は小さいが、全体の良さは保証されにくい</td></tr>
+      <tr><th>故障</th><td>中央が止まると全台が止まる</td><td class="hl">一部が止まっても残りで動ける</td></tr>
+      <tr><th>持ち主</th><td>全台が同じ持ち主なら可能</td><td class="hl">持ち主が別々なら、そもそも中央の指示に従う保証がない</td></tr>
+    </tbody>
+  </table>
+  <div class="box">どちらが常に正しいわけではない。倉庫の中なら中央で割り当てることも多い。<b>どこまで分散させるか</b>自体が設計の選択になる。最後の行「持ち主」は、パート4で詳しく扱う。</div>
+  <span class="num"></span>
+</section>
+
+<section class="slide divider">
+  <p class="part">3　27〜45分</p>
+  <h2>複数で取り組むと、何ができる？</h2>
+  <p style="font-size:21px;opacity:.7;margin-bottom:10px">相互作用は難しさの源だった。</p>
+  <p>しかし、うまく協調すれば、1台ではできないことができる。</p>
+  <span class="num"></span>
+</section>
+
+<section class="slide">
+  <p class="sec">3　協調の価値</p>
+  <h2>協調すると、1台ではできないことができる</h2>
+  <div class="cols3">
+    <div class="card" style="--c:var(--ok)"><h3>分担</h3><p>仕事を分けて並行に進めれば、全体が早く終わる。</p><p class="ex">12か所の荷物を4台で3か所ずつ運ぶ</p></div>
+    <div class="card" style="--c:var(--acc)"><h3>探索</h3><p>別々の場所を同時に調べ、見つけた情報を共有する。</p><p class="ex">在庫の場所探し。自然界ではアリが餌を探して仲間に伝える</p></div>
+    <div class="card" style="--c:var(--amb)"><h3>頑健性</h3><p>1台が故障しても、仲間が仕事を引き受ければ全体は止まらない。</p><p class="ex">故障したロボットの担当を、近くのロボットが引き継ぐ</p></div>
+  </div>
+  <p class="body muted" style="margin-top:22px">次のスライドで、分担と故障時の再割当てを実際に確かめる。</p>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="ペアで2分。ヒントは、案が出ないときだけ開く。出た案を板書してから次の作戦ラボで試す。">
+  <div class="q-wrap">
+    <p class="sec">3　作戦を考える</p>
+    <p class="q">あなたが作戦係なら、<br>10台にどんなルールを与える？</p>
+    <p class="q-note">ペアで2分。無駄足と待ちを減らすルールを考えよう。</p>
+    <div style="margin-top:20px"><button class="btn" type="button" data-reveal="hintPlan">ヒントを見る</button>
+      <div id="hintPlan" class="hidden" style="margin-top:12px"><div class="box">どの荷物を誰が取るか、人間ならどう決める？ 狭い通路で向かい合わないためには？</div></div></div>
+  </div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="学生から出た案に近いものを選んで試す。何回でも試せて、結果は表にたまる。一番速い行に色が付く。">
+  <p class="sec">3　作戦ラボ</p>
+  <h2>ぶつからずに運ぶ作戦を、試してみよう</h2>
+  <div class="single" style="grid-template-columns:600px 1fr">
+    <svg id="labSvg" viewBox="0 0 600 400" style="width:600px;height:400px;border-radius:12px"></svg>
+    <div>
+      <div class="tog">
+        <button class="btn" type="button" data-st="claim" aria-pressed="false">声を掛ける：取りに行く荷物を宣言する</button>
+        <button class="btn" type="button" data-st="zone" aria-pressed="false">担当を決める：通路ごとに受け持ちを分ける</button>
+        <button class="btn" type="button" data-st="oneway" aria-pressed="false">一方通行：通路ごとに進む向きを決める</button>
+      </div>
+      <div class="row"><button class="btn" type="button" id="labGo">この作戦で試す</button><span class="body">時間 <b id="labT">0</b></span></div>
+      <table class="hist"><thead><tr><th>作戦</th><th>時間</th><th>待ち</th></tr></thead><tbody id="labHist"><tr><td>1台だけ</td><td>262</td><td>0</td></tr><tr><td>10台、作戦なし</td><td>131</td><td id="baseWait">-</td></tr></tbody></table>
+    </div>
+  </div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="「ロボットを賢くしたか、ルールを変えたか」を挙手で聞いてから、表を開く。">
+  <p class="sec">3　作戦の振り返り</p>
+  <h2>ロボットとルール、どちらを変えた？</h2>
+  <p class="lead">作戦で速くなったとき、変えたのはロボットの賢さか、協力の仕方か。</p>
+  <button class="btn" type="button" data-reveal="reflAns" style="margin-top:14px">答えを見る</button>
+  <div id="reflAns" class="hidden" style="margin-top:14px">
+    <table class="t1">
+      <thead><tr><th style="width:230px">試した作戦</th><th style="width:300px">協調の仕組みとしては</th><th>減ったもの</th></tr></thead>
+      <tbody>
+        <tr><th>声を掛ける</th><td><b>情報交換</b></td><td>先に取られて引き返す無駄足</td></tr>
+        <tr><th>担当を決める</th><td><b>役割分担</b></td><td>同じ荷物の取り合い</td></tr>
+        <tr><th>一方通行</th><td><b>衝突を避けるルール</b></td><td>狭い通路で向かい合っての待ち</td></tr>
+      </tbody>
+    </table>
+    <div class="box ok">ロボット一台一台は何も賢くしていない。変えたのは<b>協力の仕方（ルール）</b>だけ。最も良い組合せで、10台は1台の4倍以上の速さになった。<b>目的が同じでも、協調は自動では起きない。</b></div>
+    <div class="grad"><b class="g">院</b>　目的が共通で情報が分散した問題（Dec-POMDP、補足参照）。作戦は、分散実行のための通信と制約の設計にあたる。</div>
+  </div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="3つのボタンを順に押す。「仲間が引き受ける」には、誰が故障したか、どこが残っているかを知る情報交換と、再割当ての仕組みが必要であることを強調する。">
+  <p class="sec">3　協調の価値</p>
+  <h2>もう一つの協調の価値：故障したらどうなる？</h2>
+  <div class="sim2">
+    <div class="panel"><h3>🤖 1台で12か所を運ぶ</h3><svg viewBox="0 0 480 330" id="simL" role="img" aria-label="1台のロボットが12か所を担当"></svg><p class="res" id="resL" aria-live="polite"></p></div>
+    <div class="panel"><h3>🤖🤖🤖🤖 4台で分担する</h3><svg viewBox="0 0 480 330" id="simR" role="img" aria-label="4台のロボットが3か所ずつ担当"></svg><p class="res" id="resR" aria-live="polite"></p></div>
+  </div>
+  <div class="btnrow c">
+    <button class="btn" type="button" data-s="ok" aria-pressed="true">分担して作業</button>
+    <button class="btn" type="button" data-s="broken" aria-pressed="false">1台が故障</button>
+    <button class="btn" type="button" data-s="help" aria-pressed="false">仲間が引き受ける</button>
+  </div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="2分間、ペアで考えさせてから次へ。答えを板書し、次のスライドの表と照らし合わせる。">
+  <div class="q-wrap">
+    <p class="sec">3　考えてみよう</p>
+    <p class="q">ロボット2が故障した。<br>その担当の荷物は、誰に渡す？</p>
+    <p class="q-note">一番近いロボット？　残りの仕事が少ないロボット？　電池に余裕のあるロボット？<br>その判断には、どんな情報が必要だろう。その情報は、誰が持っているだろう。</p>
+  </div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="出てきた答えを、判断基準・必要な情報・誰が持っているかの3列で整理する。情報が各ロボットの手元に分散していることが、次の契約ネットの動機になる。">
+  <p class="sec">3　考えてみよう</p>
+  <h2>判断の基準と、そのために必要な情報</h2>
+  <table class="t1">
+    <thead><tr><th style="width:300px">判断の基準</th><th style="width:360px">必要な情報</th><th>誰が持っているか</th></tr></thead>
+    <tbody>
+      <tr><th>一番近いロボットに渡す</th><td>各ロボットの現在地と、荷物までの距離</td><td>各ロボット自身</td></tr>
+      <tr><th>仕事の少ないロボットに渡す</th><td>各ロボットの残りの担当</td><td>各ロボット自身</td></tr>
+      <tr><th>電池に余裕のあるロボットに渡す</th><td>各ロボットの電池残量</td><td>各ロボット自身</td></tr>
+      <tr><th>そもそも何を渡すか</th><td>故障した台の、終わっていない担当</td><td>故障した台（または管理システム）</td></tr>
+    </tbody>
+  </table>
+  <div class="box">どの基準を使うにしても、判断に必要な情報は<b>各ロボットの手元に分散している</b>。それを集めて比べる手順が要る。その手順を仕組みにしたものの一つが、次の契約ネット。</div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="契約ネットは第2回で詳しく扱う。ここでは「割当ては仕組みとして設計できる」ことだけ伝える。">
+  <p class="sec">3　協調の仕組み</p>
+  <h2>考えた判断を、仕組みにする：契約ネット</h2>
+    <p class="body" style="margin:0 0 10px">故障した台の担当を、誰に引き継ぐかを決める手順の例。</p>
+  <table class="t1">
+    <thead><tr><th style="width:150px"></th><th style="width:31%">① 公告</th><th style="width:31%">② 入札</th><th>③ 落札（割当て）</th></tr></thead>
+    <tbody>
+      <tr><th>やりとり</th><td>「2番の担当の荷物を運べるロボットは？」</td><td>「私なら2分」「私なら5分」</td><td>2分のロボットに任せる</td></tr>
+      <tr><th>していること</th><td>何を渡すかを全員に知らせる</td><td>各自が手元の情報（距離、残りの仕事、電池）から見積もりを返す</td><td>見積もりを比べて決める</td></tr>
+    </tbody>
+  </table>
+  <div class="box">作戦ラボの「情報交換」と「役割分担」を、決まった手順にしたもの。第2回で詳しく扱う。</div>
+  <span class="num"></span>
+</section>
+
+<section class="slide divider">
+  <p class="part">4　45〜60分</p>
+  <h2>みんなが同じ目的とは限らないと、どうなる？</h2>
+  <p style="font-size:21px;opacity:.7;margin-bottom:10px">ここまでは同じ会社のロボットで、目指していたのは倉庫全体の合計時間だった。</p>
+  <p>次は倉庫の外に出る。別々の会社の配送車が同じ道路を使う。今度は、各社が目指すのは<b>全体の合計ではなく、自社の時間を短くすること</b>。今度は、あなた自身が運転手になって選ぶ。</p>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="最後の行が核心。目的が異なると、全体に都合のよい指示に従う理由がない。">
+  <p class="sec">4　目的が異なるMAS</p>
+  <h2>同じ会社のロボットから、別会社の配送車へ</h2>
+  <table class="t1">
+    <thead><tr><th style="width:190px"></th><th>同じ会社の倉庫ロボット</th><th class="hl">別々の会社の配送車</th></tr></thead>
+    <tbody>
+      <tr><th>目的</th><td>全員共通：倉庫全体の合計時間を短く</td><td class="hl">各社ばらばら：自社の配送時間を短く</td></tr>
+      <tr><th>情報</th><td>社内で共有できる</td><td class="hl">他社の配送先や予定は分からない</td></tr>
+      <tr><th>全体の指示</th><td>従う（同じ持ち主が設計している）</td><td class="hl">自社に損なら、従うとは限らない</td></tr>
+      <tr><th>必要な調整</th><td>役割分担、情報交換、衝突回避のルール</td><td class="hl">それに加えて、<b>各社が従いたくなる仕組み</b></td></tr>
+    </tbody>
+  </table>
+  <div class="box">目的が異なる場合は、「全体に良い方法」を見つけるだけでは足りない。各エージェントにとって<b>そうする理由（インセンティブ）</b>があるかを考える必要がある。</div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="全員に近道か大通りかを決めさせ、挙手で数える。">
+  <div class="q-wrap">
+    <p class="sec">4　クラスで実験</p>
+    <p class="q">あなたは配送車の運転手。自社の配送を早く終えたい。<br>近道と大通り、どちらを選ぶ？</p>
+    <div class="row" style="margin-top:24px;gap:22px;align-items:stretch">
+      <div class="box eq" style="flex:1"><b>近道</b>：選んだ人が多いほど混んで遅くなる。クラス全員が選ぶと 60分。</div>
+      <div class="box" style="flex:1"><b>大通り</b>：何人が選んでも、いつも 60分。</div>
+    </div>
+    <p class="q-note">決めたら手を挙げてください。</p>
+  </div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="受講者数と、近道に手を挙げた人数を入力して「結果を見る」。結果を見せたら選び直させ、2回目、3回目を記録する。人数を変えると結果は隠れる。">
+  <p class="sec">4　クラスで実験</p>
+  <h2>近道か、大通りか？</h2>
+  <div class="route">
+    <div>
+      <svg viewBox="0 0 580 330" role="img" aria-label="倉庫から街まで、近道と大通り" style="width:560px">
+        <path d="M60,165 C160,40 420,40 520,165" fill="none" stroke="var(--eq)" stroke-width="15" stroke-linecap="round" opacity=".85"/>
+        <path d="M60,165 C160,290 420,290 520,165" fill="none" stroke="var(--acc)" stroke-width="15" stroke-linecap="round" opacity=".85"/>
+        <g id="routePeople"></g>
+        <circle cx="60" cy="165" r="28" fill="var(--ink)"/><text x="60" y="173" text-anchor="middle" font-size="18" font-weight="700" fill="var(--paper)">倉庫</text>
+        <circle cx="520" cy="165" r="28" fill="var(--ink)"/><text x="520" y="173" text-anchor="middle" font-size="18" font-weight="700" fill="var(--paper)">街</text>
+        <text x="290" y="34" text-anchor="middle" font-size="20" font-weight="700" fill="var(--eq)">近道</text>
+        <text x="290" y="318" text-anchor="middle" font-size="20" font-weight="700" fill="var(--acc)">大通り（60分）</text>
+      </svg>
+      <table class="hist"><thead><tr><th>回</th><th>近道の人数</th><th>近道</th><th>大通り</th><th>全体の平均</th></tr></thead><tbody id="routeHist"></tbody></table>
+    </div>
+    <div>
+      <div class="inp"><span>受講者数</span><input type="number" id="nClass" min="2" max="300" value="30"><span>人</span></div>
+      <div class="inp"><span>近道を選んだ人</span><button class="pm" type="button" id="kMinus" aria-label="1人減らす">−</button><input type="number" id="kShort" min="0" max="300" value="0"><button class="pm" type="button" id="kPlus" aria-label="1人増やす">＋</button><span>人</span></div>
+      <button class="btn" type="button" id="routeGo" style="margin-top:6px">結果を見る</button>
+      <div id="routeOut" class="hidden">
+        <div class="res3">
+          <div><div class="k">近道</div><div class="n" id="rS"></div></div>
+          <div><div class="k">大通り</div><div class="n">60分</div></div>
+          <div><div class="k">全体の平均</div><div class="n" id="rA"></div></div>
+        </div>
+        <p class="body" id="rMsg" style="margin-top:10px"></p>
+        <p class="small muted" style="margin-top:6px">結果を見て、もう一度選び直してください。</p>
+      </div>
+    </div>
+  </div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="何回か選び直した結果を振り返る。多くの場合、近道の人数は増えていく。">
+  <p class="sec">4　クラスで実験の振り返り</p>
+  <h2>選び直すと、近道の人数はどうなった？</h2>
+  <p class="lead">増えた？ 減った？ 全体の平均は良くなった？</p>
+  <button class="btn" type="button" data-reveal="afterAns" style="margin-top:14px">よく起きることを見る</button>
+  <div id="afterAns" class="hidden" style="margin-top:14px">
+    <ul class="dots">
+      <li style="--c:var(--eq)">近道の方が速いと分かると、大通りの人は近道に移りたくなる</li>
+      <li style="--c:var(--eq)">近道が増えるほど近道も遅くなり、最後は全員が60分に近づく。そこでは一人だけ大通りに移っても60分で、得をしない</li>
+      <li style="--c:var(--acc)">自分の選択が、<b>ほかの運転手の時間まで変える</b>。倉庫の通路と同じ相互作用が、今度は各社の損得として現れる</li>
+    </ul>
+  </div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="半分ずつの結果を見せてから「誰が大通りに行く？」を問い、手を挙げる人が少ないことを確かめる。">
+  <p class="sec">4　全体を良くするには</p>
+  <h2>みんなのために、遠回りできる？</h2>
+  <p class="lead">全体の平均が一番短くなるのは、どんな分け方だろう？</p>
+  <div class="row" style="margin-top:12px"><button class="btn" type="button" data-reveal="halfOut">半分ずつに分けてみる</button></div>
+  <div id="halfOut" class="hidden" style="margin-top:14px">
+    <div class="res3" style="max-width:900px">
+      <div><div class="k">近道（半分の人）</div><div class="n">30分</div></div>
+      <div><div class="k">大通り（半分の人）</div><div class="n">60分</div></div>
+      <div><div class="k">全体の平均</div><div class="n">45分</div></div>
+    </div>
+    <p class="body" style="margin-top:10px">全員が近道のとき（平均60分）より、平均で15分早い。</p>
+    <div class="box amb" style="font-size:24px"><b>では、大通りに行くのは誰？</b>　自分から手を挙げる人はいる？</div>
+    <p class="body muted" style="margin-top:8px">全体に良い案でも、各自が選びたいとは限らない。倉庫のロボットとの違いはここにある。</p>
+  </div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="学生から案を出させてから、カードを1枚ずつ開く。">
+  <p class="sec">4　作戦を考える</p>
+  <h2>遠回りしてもらうには、どうする？</h2>
+  <div class="ideas">
+    <button class="idea" type="button"><span class="t">交代でやる</span><span class="d">今日はA社、明日はB社が大通り</span><span class="ans">繰り返すなら、損を順番に分け合える。<b>公平性</b>の工夫。</span></button>
+    <button class="idea" type="button"><span class="t">ごほうび</span><span class="d">大通りを選んだ運転手に報酬</span><span class="ans">遠回りにも得がある状態をつくる。<b>インセンティブ</b>の設計。</span></button>
+    <button class="idea" type="button"><span class="t">近道に料金</span><span class="d">近道を通ると通行料がかかる</span><span class="ans">混雑させる側が、他人に与える遅れの分を負担する。実際の混雑課金と同じ考え方。</span></button>
+    <button class="idea" type="button"><span class="t">くじ引き</span><span class="d">くじで決める</span><span class="ans">決め方が公平なら納得しやすい。ただし毎回だと不満も出る。</span></button>
+  </div>
+  <div class="box" style="margin-top:18px">倉庫では「ルールを決めれば従う」だった。目的が異なる相手には、<b>そうしたくなる理由（インセンティブ）</b>まで設計する必要がある。</div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="パート3とパート4の対比をまとめる。この1枚が前半の結論。">
+  <p class="sec">4　目的が異なるMAS</p>
+  <h2>目的が共通か異なるかで、必要な調整が変わる</h2>
+  <div class="cols2">
+    <div class="card" style="--c:var(--ok)">
+      <h3>目的が共通（倉庫ロボット）</h3>
+      <p>全員が全体の良さを目指しているので、情報を共有し、割当てを決めれば、全体に良い動きに近づける。</p>
+      <p class="ex">主な課題：さっきの作戦ラボのような、情報交換、役割分担、衝突を避けるルール</p>
+    </div>
+    <div class="card" style="--c:var(--eq)">
+      <h3>目的が異なる（配送車）</h3>
+      <p>全体に良い方法が分かっていても、各自がそれを選ぶ理由がなければ実現しない。</p>
+      <p class="ex">主な課題：各自が従いたくなる仕組み。さっきの交代、ごほうび、通行料</p>
+    </div>
+  </div>
+  <div class="box"><b>協調するMASも、利害が異なるMASもある。</b>その両方で、他者との相互作用を考える必要がある。現実には、両方が混ざっていることも多い（同じ会社でも部署ごとに評価が違う、など）。</div>
+  <span class="num"></span>
+</section>
+
+<section class="slide divider">
+  <p class="part">5　60〜68分</p>
+  <h2>MAS研究では、何を作り、何を調べる？</h2>
+  <p style="font-size:21px;opacity:.7;margin-bottom:10px">協調のためにも、利害の調整のためにも、何らかの設計が必要だった。</p>
+  <p>では、研究者は具体的に何を設計し、何を調べているのか。</p>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="3つの研究対象を、今日の倉庫と配送の例で具体化する。">
+  <p class="sec">5　研究の対象</p>
+  <h2>MAS研究の3つの対象</h2>
+  <div class="cols3">
+    <div class="card" style="--c:var(--acc)"><h3>エージェントの判断方法</h3><p>与えられた状況で、各エージェントがどう判断するか。</p><p class="ex">倉庫：次にどの荷物を取るか<br>配送：相手の出方を予想して経路を選ぶ<br>手法：探索、計画、学習、交渉戦略</p></div>
+    <div class="card" style="--c:var(--eq)"><h3>相互作用のルール</h3><p>エージェント同士がどう情報を交わし、どう決めるか。</p><p class="ex">倉庫：契約ネットによる割当て、一方通行<br>配送：通行料、配送枠のオークション<br>手法：プロトコル、メカニズム設計</p></div>
+    <div class="card" style="--c:var(--amb)"><h3>全体の評価</h3><p>その結果、システム全体がどうなったかを測る。</p><p class="ex">全体の効率（平均所要時間）<br>公平性（特定の会社だけ損していないか）<br>頑健性、安定性（誰も抜けたがらないか）</p></div>
+  </div>
+  <div class="box">個々の<b>振る舞い</b>と、相互作用の<b>仕組み</b>の両方が研究対象になる。そして、それを何で<b>評価</b>するかも研究の一部である。</div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="良いルールは、エージェントに複雑な判断を求めずに望ましい結果を導く。">
+  <p class="sec">5　研究の対象</p>
+  <h2>ルールと振る舞いの組み合わせ</h2>
+  <table class="t1">
+    <thead><tr><th style="width:170px">仕組み</th><th style="width:360px">ルール（プロトコル）の例</th><th style="width:360px">振る舞い（戦略）の例</th><th>回</th></tr></thead>
+    <tbody>
+      <tr><th>割当て</th><td>契約ネット：公告、入札、落札</td><td>自分の入札額をどう見積もるか</td><td>2</td></tr>
+      <tr><th>交渉</th><td>交互に提案する、期限を決める</td><td>いつ、どれだけ譲歩するか</td><td>9、10</td></tr>
+      <tr><th>オークション</th><td>一番高い入札者が、二番目の価格を払う</td><td>いくらで入札するか</td><td>12</td></tr>
+      <tr><th>マッチング</th><td>希望順位を出し合って組を決める</td><td>希望順位を正直に出すか</td><td>11</td></tr>
+      <tr><th>学習</th><td>各自が独立に学ぶ、訓練時だけ情報を共有する</td><td>相手も学んでいることをどう扱うか</td><td>7、8</td></tr>
+    </tbody>
+  </table>
+  <div class="box ok">ルールの工夫で、正直に振る舞うのが得になるようにもできる（例：二番目の価格を払うオークション）。</div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="ここに挙げた題材は、このあとの演習の候補になる。">
+  <p class="sec">5　応用</p>
+  <h2>社会の中のMAS：演習の題材の候補</h2>
+  <div class="cols2" style="gap:18px 40px">
+    <div class="card" style="--c:var(--acc)"><h3>配車</h3><p>乗客とドライバーをどう組み合わせれば、待ち時間と空車が減るか。ドライバーは各自の収入を考える。</p></div>
+    <div class="card" style="--c:var(--ok)"><h3>研究室配属</h3><p>学生と研究室の希望をどう突き合わせるか。希望を正直に出すことが得になるか。</p></div>
+    <div class="card" style="--c:var(--amb)"><h3>会議日程の調整</h3><p>各自の予定と都合の良さを、全員に明かさずに合意できるか。代理AIによる交渉。</p></div>
+    <div class="card" style="--c:var(--eq)"><h3>ロボットとAIチーム</h3><p>倉庫ロボット、ドローン、役割分担するLLMエージェント。誰が何を担当し、どう情報を渡すか。</p></div>
+  </div>
+  <span class="num"></span>
+</section>
+
+<section class="slide">
+  <p class="sec">5　LLMエージェントの時代</p>
+  <h2>何が変わり、何が変わらないか</h2>
+  <div class="cols2">
+    <div class="card" style="--c:var(--amb)">
+      <h3>変わったこと</h3>
+      <ul class="dots" style="--c:var(--amb)">
+        <li>やりとりが<b>自然言語</b>になり、提案や理由を柔軟に表現できる</li>
+        <li>目的をプロンプトで与えるため、<b>何を目指しているか</b>が曖昧になりやすい</li>
+        <li>出力が確率的で、<b>評価と再現</b>が難しい</li>
+      </ul>
+    </div>
+    <div class="card" style="--c:var(--acc)">
+      <h3>変わらないこと</h3>
+      <ul class="dots">
+        <li>協調には、役割分担と情報交換が必要</li>
+        <li>各エージェントが異なる利害と<b>私的情報</b>をもつことがある</li>
+        <li>結果の良し悪しは、<b>ルールと評価</b>の設計で決まる</li>
+      </ul>
+    </div>
+  </div>
+  <div class="box">エージェントを「作る」コストは大きく下がった。そのぶん、<b>相互作用の仕組みと評価をどう設計するか</b>の比重が増している。</div>
+  <span class="num"></span>
+</section>
+
+<section class="slide divider">
+  <p class="part">演習　68〜85分</p>
+  <h2>身近な問題を、MASとして捉えられる？</h2>
+  <p style="font-size:21px;opacity:.7;margin-bottom:10px">今日は、倉庫ロボットと配送車を、同じ見方で分析してきた。</p>
+  <p>その見方を6つの観点にまとめ、自分で選んだ題材に使う。</p>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="今日の2つの例を6観点で並べて見せる。目的が共通か異なるかで、5と6の書き方が変わることに注目させる。">
+  <p class="sec">演習　6つの観点</p>
+  <h2>6つの観点で書く：今日の2つの例</h2>
+  <table class="ws">
+    <thead><tr><th style="width:260px">観点</th><th>倉庫ロボット10台（目的が共通）</th><th>別会社の配送車（目的が異なる）</th></tr></thead>
+    <tbody>
+      <tr><th>1　誰をエージェントとするか</th><td>各ロボット</td><td>各社の配送車（または各社）</td></tr>
+      <tr><th>2　各自は何を知っているか</th><td>自分の位置と担当、近くの通路の混み具合</td><td>自社の配送先と道路の混み具合。他社の予定は知らない</td></tr>
+      <tr><th>3　何を目指し、何を選べるか</th><td>倉庫全体の合計時間を短く。荷物と通路を選ぶ</td><td>自社の配送時間を短く。経路を選ぶ</td></tr>
+      <tr><th>4　行動は他者にどう影響するか</th><td>同じ通路に入ると互いに待つ</td><td>同じ道を選ぶほど、全員が遅くなる</td></tr>
+      <tr><th>5　どんな情報交換や調整が必要か</th><td>担当の割当て、進捗の共有、通路のルール</td><td>それに加えて、各社が従いたくなる仕組み（通行料など）</td></tr>
+      <tr><th>6　うまくいったことを何で評価するか</th><td>全体の出荷時間、故障時の遅れ</td><td>全体の平均時間と、各社間の公平さ</td></tr>
+    </tbody>
+  </table>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="個人6分、ペア4分。協調がうまくいく題材を選んでもよい。「個と全体のずれ」を必ず探す必要はない。">
+  <p class="sec">演習A　68〜78分</p>
+  <h2>題材を1つ選び、6つの観点で書いてみよう</h2>
+  <p class="body" style="margin:-8px 0 12px">題材の例：配車、研究室配属、会議日程、倉庫やドローンのロボット、AIチーム。自分で選んだものでもよい。</p>
+  <table class="ws">
+    <thead><tr><th style="width:330px">観点</th><th>自分の題材：</th></tr></thead>
+    <tbody>
+      <tr><th>1　誰をエージェントとするか</th><td class="blank"></td></tr>
+      <tr><th>2　各自は何を知っているか</th><td class="blank"></td></tr>
+      <tr><th>3　何を目指し、何を選べるか</th><td class="blank"></td></tr>
+      <tr><th>4　行動は他者にどう影響するか</th><td class="blank"></td></tr>
+      <tr><th>5　どんな情報交換や調整が必要か</th><td class="blank"></td></tr>
+      <tr><th>6　うまくいったことを何で評価するか</th><td class="blank"></td></tr>
+    </tbody>
+  </table>
+  <p class="small muted" style="margin-top:10px">個人で6分書き、隣の人と4分で説明し合う。</p>
+  <span class="num"></span>
+</section>
+
+<section class="slide adv" data-note="院生は演習Aと同じ題材で、追加の2問まで考える。可能なら補足の形式モデルのどれで書けるかも一言添えさせる。">
+  <p class="sec">演習B　68〜78分<span class="adv-badge">発展</span></p>
+  <h2>大学院生は、同じ題材でもう一歩踏み込む</h2>
+  <div class="cols2">
+    <div class="card" style="--c:var(--eq)">
+      <h3>問1　「目的が共通」という仮定は妥当か</h3>
+      <p>全員が同じ目的だとみなしてよいか。同じ組織でも、部署や個人ごとに評価基準が違わないか。仮定を外すと、観点5の必要な調整はどう変わるか。</p>
+    </div>
+    <div class="card" style="--c:var(--acc)">
+      <h3>問2　中央で決める場合と、何を比較するか</h3>
+      <p>中央の計画者が全情報を持って決めた場合を基準にするなら、何を比べるか。効率の差か、必要な通信量か、故障への強さか、各自が従う保証か。</p>
+    </div>
+  </div>
+  <div class="grad" style="margin-top:22px"><b class="g">院</b>　余裕があれば、題材を補足の形式モデル（標準形ゲーム、確率ゲーム、Dec-POMDP、POSG）のどれで書けるかも考える。報酬を共通にするか個別にするかが、問1の答えに対応する。</div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="2〜3組に発表してもらい、下の点に当てはまるものがあればその場で指摘する。">
+  <p class="sec">共有　78〜85分</p>
+  <h2>共有：書けているかを確かめる4つの点</h2>
+  <div class="cols2">
+    <ul class="dots">
+      <li style="--c:var(--acc)"><b>エージェントの範囲が決まっているか。</b>人、会社、代理AIのどれを1つのエージェントとみなすかで、話が変わる</li>
+      <li style="--c:var(--ok)"><b>各自が「知らないこと」が書けているか。</b>協調に情報交換が必要なのは、情報が分散しているから</li>
+    </ul>
+    <ul class="dots">
+      <li style="--c:var(--amb)"><b>他者への影響が具体的か。</b>「影響し合う」だけでなく、誰の何がどう変わるかまで書く</li>
+      <li style="--c:var(--eq)"><b>評価の基準が書けているか。</b>全体の効率か、公平さか、故障への強さか。何を良しとするかで設計が変わる</li>
+    </ul>
+  </div>
+  <div class="box ok">目的が共通の題材では観点5の「協調の仕組み」が、目的が異なる題材ではそれに加えて「従いたくなる仕組み」が中心になっているはず。</div>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="今日の6観点が、今後どの回の道具で深まるかを示す。">
+  <p class="sec">まとめ　85〜90分</p>
+  <h2>今日の話は、今後の授業にどうつながる？</h2>
+  <div class="map">
+    <div class="now" style="--c:var(--ok)"><div class="wk">第1〜4回</div><h3>エージェントの基本</h3><p>観点1〜3：何を知り、何を目指し、どう判断するか</p></div>
+    <div style="--c:var(--acc)"><div class="wk">第5〜6回</div><h3>ゲーム理論</h3><p>目的が異なるときの判断。経路選択の落ち着き先</p></div>
+    <div style="--c:var(--acc)"><div class="wk">第7〜8回</div><h3>学習</h3><p>通路や経路の選択を繰り返すと、どうなるか</p></div>
+    <div style="--c:var(--amb)"><div class="wk">第9〜10回</div><h3>交渉</h3><p>会議日程のように、話し合って合意する</p></div>
+    <div style="--c:var(--amb)"><div class="wk">第11〜12回</div><h3>マッチング、オークション</h3><p>研究室配属、配車、仕事の割当て</p></div>
+    <div style="--c:var(--eq)"><div class="wk">第13〜14回</div><h3>評価と実験</h3><p>観点6：何で、どう測るか</p></div>
+    <div style="--c:var(--ink)"><div class="wk">第15回</div><h3>発表</h3><p>今日の題材を発展させてもよい</p></div>
+  </div>
+  <span class="num"></span>
+</section>
+
+<section class="slide">
+  <p class="sec">まとめ</p>
+  <h2>ロボットを10台集めたら、最強のチームになるか</h2>
+  <p class="lead" style="margin:-8px 0 14px;color:var(--ok)"><b>一人ひとりが賢くても、チームがうまく動くとは限らない。協力の仕方を工夫すると、結果が変わる。</b></p>
+  <div class="box" style="margin-top:0;font-size:21px">MASは、複数の主体がそれぞれ判断し、互いに影響するシステムです。協調すれば1台ではできないことができますが、そのためには役割分担や情報交換が必要です。目的が異なる場合は、各自がそうしたくなる仕組みも必要になります。この授業では、エージェントの振る舞いと相互作用のルールをどう設計し、どう評価するかを学びます。</div>
+  <ul class="dots" style="margin-top:14px">
+    <li style="--c:var(--ok)"><b>エージェント</b>は、知覚し、判断し、行動する主体</li>
+    <li style="--c:var(--acc)">複数になると、自分の結果が他者の行動にも左右される（<b>相互作用</b>）</li>
+    <li style="--c:var(--amb)"><b>協調</b>には価値があり、その実現には役割分担、情報交換、ルールが要る</li>
+    <li style="--c:var(--eq)">目的が異なると、全体に良い方法を各自が選ぶとは限らない（<b>インセンティブ</b>）</li>
+  </ul>
+  <span class="num"></span>
+</section>
+
+<section class="slide" data-note="課題の分量や提出方法はシラバスに合わせて調整する。">
+  <p class="sec">次回に向けて</p>
+  <h2>課題と次回予告</h2>
+  <div class="cols2">
+    <div class="card" style="--c:var(--eq)">
+      <h3>課題</h3>
+      <p><b>学部</b>：演習の題材を6つの観点で清書する。共有で確かめた4つの点（エージェントの範囲、知らないこと、他者への影響、評価の基準）が書けているかを見直す。</p>
+      <p style="margin-top:10px"><b>院</b>：上に加えて、演習Bの問1と問2に答える。参考文献から1本を選び、自分の題材との関係を数行で述べる。</p>
+    </div>
+    <div class="card" style="--c:var(--acc)">
+      <h3>次回　第2回</h3>
+      <p>マルチエージェント研究の歴史と理論的背景。今日出てきた契約ネットから、分散人工知能、ゲーム理論が必要になった理由までを扱う。</p>
+      <p class="ex">課題の題材を、次回の冒頭で何人かに紹介してもらいます。</p>
+    </div>
+  </div>
+  <span class="num"></span>
+</section>
+
+<section class="slide divider adv">
+  <p class="part">補足</p>
+  <h2>大学院向け・後の回で扱う内容</h2>
+  <p>初回ですべてを理解することは目標にしない。質問に応じて、または院生向けに使う。</p>
+  <span class="num"></span>
+</section>
+
+<section class="slide adv">
+  <p class="sec">補足　エージェントの定義<span class="adv-badge">発展</span></p>
+  <h2>性質による定義：弱い概念と強い概念</h2>
+  <div class="cols2">
+    <div>
+      <p class="body"><b>弱い概念</b>（Wooldridge &amp; Jennings 1995）</p>
+      <ul class="dots" style="margin-top:6px">
+        <li><b>自律性</b>：直接の介入なしに行動と内部状態を制御する</li>
+        <li><b>反応性</b>：環境の変化を知覚し、適時に応答する</li>
+        <li><b>能動性</b>：目標に向けて主導的に行動する</li>
+        <li><b>社会性</b>：他のエージェントと相互作用する</li>
+      </ul>
+    </div>
+    <div>
+      <p class="body"><b>強い概念</b></p>
+      <p class="body muted" style="margin-top:6px">信念・願望・意図などの心的状態でエージェントを記述・設計する立場。第4回の BDI モデルにつながる。</p>
+      <div class="box" style="margin-top:22px">クイズで意見が割れたのは、どの性質をどの程度要求するかで境界が変わるため。定義は研究の目的に応じて選ぶ。</div>
+    </div>
+  </div>
+  <p class="cite">Wooldridge, M. &amp; Jennings, N. R. (1995). Intelligent agents: Theory and practice. Knowledge Engineering Review, 10(2).</p>
+  <span class="num"></span>
+</section>
+
+<section class="slide adv">
+  <p class="sec">補足　MASの特徴づけ<span class="adv-badge">発展</span></p>
+  <h2>MASの特徴づけと環境の性質</h2>
+  <div class="cols2">
+    <div>
+      <p class="body"><b>MASの典型的な特徴</b>（Jennings, Sycara &amp; Wooldridge 1998）</p>
+      <ul class="dots" style="margin-top:6px">
+        <li>各エージェントの情報・能力は不完全</li>
+        <li>大域的な制御主体がない</li>
+        <li>データが分散している</li>
+        <li>計算が非同期に進む</li>
+      </ul>
+    </div>
+    <table class="t1">
+      <thead><tr><th>環境の軸</th><th>他者がいると</th></tr></thead>
+      <tbody>
+        <tr><th>観測可能性</th><td>他者の選好や制約は観測できない</td></tr>
+        <tr><th>決定性</th><td>他者の行動が不確実性の源</td></tr>
+        <tr><th>時間構造</th><td>繰り返しで評判や報復が生じる</td></tr>
+        <tr><th>同期性</th><td>通信の遅延と順序が効く</td></tr>
+        <tr class="hl"><th>定常性</th><td><b>他者が学習すると環境が変わり続ける</b></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="cite">Jennings, N. R., Sycara, K. &amp; Wooldridge, M. (1998). A roadmap of agent research and development. Autonomous Agents and Multi-Agent Systems, 1(1).</p>
+  <span class="num"></span>
+</section>
+
+<section class="slide adv" data-note="第5回の予告として。通路の2×2と経路選択を均衡で読む。">
+  <p class="sec">補足　ゲームとして書く<span class="adv-badge">発展</span></p>
+  <h2>標準形ゲームとナッシュ均衡（第5回）</h2>
+  <div class="formula"><i>G</i> = ( <i>N</i>, (<i>A<sub>i</sub></i>), (<i>u<sub>i</sub></i>) )　　プレイヤー、行動、利得</div>
+  <div class="cols2">
+    <div>
+      <p class="body"><b>ナッシュ均衡</b>：全員が互いに最適反応になっている行動の組。誰も単独で変える得がない。</p>
+      <div class="formula" style="font-size:22px"><i>u<sub>i</sub></i>(<i>a<sub>i</sub></i><sup>*</sup>, <i>a</i><sub>−<i>i</i></sub><sup>*</sup>) ≥ <i>u<sub>i</sub></i>(<i>a<sub>i</sub></i>, <i>a</i><sub>−<i>i</i></sub><sup>*</sup>)　∀<i>i</i>, ∀<i>a<sub>i</sub></i></div>
+    </div>
+    <div class="box ok" style="margin-top:0;font-size:18.5px">
+      <b>通路の2×2</b>：倉庫では共通目的（合計時間）なので、合計10分の（近い, 遠い）か（遠い, 近い）を選べばよい。仮に各自が自分の時間だけを見ても、この2つが均衡になる。課題は、どちらに合わせるかを決めること（役割分担やルールで解ける）。<br><br>
+      <b>クラスで実験</b>：「全員が近道」が均衡。平均60分で、半分ずつ（平均45分）より悪いが、一人だけ大通りに移っても60分のままで得をしないので、誰も動かない。目的が異なるMASで、仕組みの設計が必要になる理由の一つ。
+    </div>
+  </div>
+  <span class="num"></span>
+</section>
+
+<section class="slide adv">
+  <p class="sec">補足　形式モデル<span class="adv-badge">発展</span></p>
+  <h2>状態と部分観測を加える：確率ゲームと Dec-POMDP</h2>
+  <div class="cols2">
+    <div>
+      <p class="body"><b>確率ゲーム</b>（Shapley 1953、MARL の枠組みとして Littman 1994）</p>
+      <div class="formula" style="font-size:22px">⟨ <i>N</i>, <i>S</i>, (<i>A<sub>i</sub></i>), <i>P</i>, (<i>R<sub>i</sub></i>) ⟩</div>
+      <ul class="dots">
+        <li>遷移が全員の同時行動に依存</li>
+        <li>|<i>N</i>|=1 なら MDP、|<i>S</i>|=1 なら繰り返しゲーム</li>
+        <li>他者の方策が変わると、自分から見た環境が変わる（非定常性）</li>
+      </ul>
+    </div>
+    <div>
+      <p class="body"><b>Dec-POMDP ／ POSG</b></p>
+      <div class="formula" style="font-size:22px">⟨ <i>N</i>, <i>S</i>, (<i>A<sub>i</sub></i>), <i>P</i>, <i>R</i>, (<i>Ω<sub>i</sub></i>), <i>O</i> ⟩</div>
+      <ul class="dots">
+        <li>各自は私的な観測だけを受け取る</li>
+        <li>報酬が共通なら Dec-POMDP（倉庫ロボット）、個別なら POSG（配送車）</li>
+        <li>Dec-POMDP の有限ホライズン最適化は NEXP 完全（Bernstein et al. 2002）</li>
+      </ul>
+    </div>
+  </div>
+  <p class="cite">Shapley (1953) PNAS 39(10).　Littman (1994) ICML.　Bernstein, Givan, Immerman &amp; Zilberstein (2002) Math. of Operations Research 27(4).</p>
+  <span class="num"></span>
+</section>
+
+<section class="slide adv">
+  <p class="sec">補足　形式モデル<span class="adv-badge">発展</span></p>
+  <h2>モデル間の関係</h2>
+  <table class="t1">
+    <thead><tr><th style="width:240px">モデル</th><th style="width:150px">エージェント数</th><th style="width:200px">状態遷移</th><th style="width:170px">観測</th><th>報酬</th></tr></thead>
+    <tbody>
+      <tr><th>MDP</th><td>1</td><td>あり</td><td>完全</td><td>単一</td></tr>
+      <tr><th>POMDP</th><td>1</td><td>あり</td><td>部分</td><td>単一</td></tr>
+      <tr class="hl"><th>標準形ゲーム</th><td>複数</td><td>なし</td><td>1回限り</td><td>各自</td></tr>
+      <tr class="hl"><th>繰り返しゲーム</th><td>複数</td><td>なし（反復）</td><td>過去の行動</td><td>各自</td></tr>
+      <tr class="hl"><th>確率ゲーム</th><td>複数</td><td>あり</td><td>完全</td><td>各自</td></tr>
+      <tr class="hl"><th>Dec-POMDP</th><td>複数</td><td>あり</td><td>部分・私的</td><td>共通</td></tr>
+      <tr class="hl"><th>POSG</th><td>複数</td><td>あり</td><td>部分・私的</td><td>各自</td></tr>
+    </tbody>
+  </table>
+  <p class="body muted" style="margin-top:14px">「報酬が共通か各自か」の列が、今日の「目的が共通か異なるか」に対応する。</p>
+  <span class="num"></span>
+</section>
+
+<section class="slide adv">
+  <p class="sec">補足　解概念<span class="adv-badge">発展</span></p>
+  <h2>MASにおける「良い答え」は一つではない</h2>
+  <table class="t1">
+    <thead><tr><th style="width:240px">解概念</th><th style="width:480px">ひとことで</th><th>主に扱う回</th></tr></thead>
+    <tbody>
+      <tr><th>ナッシュ均衡</th><td>誰も単独で変える得がない</td><td>第5回</td></tr>
+      <tr><th>パレート最適</th><td>誰かを損させずに誰かを得させることはできない</td><td>第9、13回</td></tr>
+      <tr><th>社会的厚生の最大化</th><td>全員の利得の和（あるいは最小値など）が最大</td><td>第13回</td></tr>
+      <tr><th>コア、シャープレイ値</th><td>誰も抜けたがらない、貢献に応じた分け方</td><td>第6回</td></tr>
+      <tr><th>安定マッチング</th><td>今の相手より互いに好む組がない</td><td>第11回</td></tr>
+      <tr><th>耐戦略性</th><td>本当の希望を申告するのが得</td><td>第12回</td></tr>
+    </tbody>
+  </table>
+  <div class="box">演習の観点6「何で評価するか」は、どの解概念を採用するかの選択にあたる。</div>
+  <span class="num"></span>
+</section>
+
+<section class="slide adv" data-note="近道を追加する前に「速くなるか遅くなるか」を予想させる。">
+  <p class="sec">補足　Braess のパラドックス<span class="adv-badge">発展</span></p>
+  <h2>道路を増やすと、全員が遅くなる</h2>
+  <div class="route">
+    <div>
+      <div class="btnrow" style="margin-bottom:10px">
+        <button class="btn" type="button" data-b="base" aria-pressed="true">元の道路網</button>
+        <button class="btn" type="button" data-b="eq" aria-pressed="false">近道を追加</button>
+        <button class="btn" type="button" data-b="opt" aria-pressed="false">近道あり＋中央計画</button>
+      </div>
+      <svg viewBox="0 0 600 380" id="braessSvg" role="img" aria-label="SからEへの道路網とAからBへの近道"></svg>
+      <p class="small muted">4000台が S から E へ。<span class="m"><i>x</i></span> はその道路を通る台数。</p>
+    </div>
+    <div>
+      <div class="flows"><table><thead><tr><th>経路</th><th>台数</th><th>所要時間</th></tr></thead><tbody id="flowBody"></tbody></table></div>
+      <div class="bigtime"><span>全員の所要時間</span><span class="n" id="bAvg"></span></div>
+      <p class="bnote" id="bNote" aria-live="polite"></p>
+    </div>
+  </div>
+  <p class="cite">Braess, D. (1968). Über ein Paradoxon aus der Verkehrsplanung. Unternehmensforschung, 12.</p>
+  <span class="num"></span>
+</section>
+
+<section class="slide adv">
+  <p class="sec">補足　無秩序の代償<span class="adv-badge">発展</span></p>
+  <h2>Price of Anarchy</h2>
+  <div class="formula">PoA ＝ max<sub><i>σ</i> ∈ NE</sub> <i>C</i>(<i>σ</i>) ／ min<sub><i>s</i></sub> <i>C</i>(<i>s</i>)</div>
+  <div class="cols2">
+    <ul class="dots">
+      <li>最悪の均衡のコストと、最適なコストの比（Koutsoupias &amp; Papadimitriou 1999）</li>
+      <li>クラスで実験：60 ／ 45 ＝ 4/3</li>
+      <li>Braess の例：80 ／ 65 ≈ 1.23</li>
+      <li>遅延が線形の利己的経路選択では、どんなネットワークでも PoA ≤ 4/3（Roughgarden &amp; Tardos 2002）</li>
+    </ul>
+    <div class="box" style="margin-top:0">演習Bの問2「中央で決める場合と何を比較するか」に対する、代表的な答えの一つ。各自に任せることで最悪どれだけ効率を失うかを保証する量。</div>
+  </div>
+  <p class="cite">Koutsoupias &amp; Papadimitriou (1999) STACS.　Roughgarden &amp; Tardos (2002) Journal of the ACM 49(2).</p>
+  <span class="num"></span>
+</section>
+
+<section class="slide adv">
+  <p class="sec">補足　研究の流れ<span class="adv-badge">発展</span></p>
+  <h2>主な転換点（第2回）</h2>
+  <div class="tl">
+    <div class="tl-row">
+      <div style="--c:var(--ok)"><span class="y">1980</span><h3>契約ネット</h3><p>公告と入札による分散的な課題割当（Smith）</p></div>
+      <div style="--c:var(--ok)"><span class="y">1980年代</span><h3>分散人工知能</h3><p>協調的な分散問題解決が中心</p></div>
+      <div style="--c:var(--acc)"><span class="y">1990年代</span><h3>BDI</h3><p>心的状態によるエージェント設計（Rao &amp; Georgeff）</p></div>
+      <div style="--c:var(--acc)"><span class="y">1994</span><h3>マルコフゲーム</h3><p>マルチエージェント強化学習の枠組み（Littman）</p></div>
+      <div style="--c:var(--eq)"><span class="y">2002</span><h3>AAMAS 発足</h3><p>複数の会議を統合した国際会議</p></div>
+      <div style="--c:var(--eq)"><span class="y">2010</span><h3>ANAC 開始</h3><p>自動交渉エージェントの国際競技会</p></div>
+      <div style="--c:var(--amb)"><span class="y">2020年代</span><h3>LLMエージェント</h3><p>自然言語で相互作用する生成的エージェント</p></div>
+    </div>
+  </div>
+  <div class="box" style="margin-top:34px">重心は、<b>目的が共通の分散問題解決</b>から<b>利害が異なる主体の相互作用</b>へ、さらに<b>学習する主体</b>へと広がってきた。今日の前半（倉庫）から後半（配送車）への流れと同じ。</div>
+  <p class="cite">Smith, R. G. (1980). The contract net protocol. IEEE Trans. Computers, C-29(12).　Rao &amp; Georgeff (1995). BDI agents: From theory to practice. ICMAS.</p>
+  <span class="num"></span>
+</section>
+
+<section class="slide adv">
+  <p class="sec">補足　未解決問題<span class="adv-badge">発展</span></p>
+  <h2>現在の主要な研究課題と発表の場</h2>
+  <div class="cols2">
+    <ul class="dots">
+      <li style="--c:var(--ok)"><b>非定常性とスケール</b>：多数の学習主体が同時に適応する環境での安定した学習</li>
+      <li style="--c:var(--ok)"><b>混合動機での協力</b>：理解、コミュニケーション、コミットメント、制度（Cooperative AI）</li>
+      <li style="--c:var(--acc)"><b>人間とエージェントの協働</b>：選好の引き出し、説明、委任の範囲</li>
+    </ul>
+    <ul class="dots">
+      <li style="--c:var(--acc)"><b>評価と再現性</b>：ベンチマーク設計、統計的に妥当な比較</li>
+      <li style="--c:var(--eq)"><b>AI同士の相互作用の安全性</b>：意図しない共謀、操作、責任の所在</li>
+      <li style="--c:var(--eq)"><b>自然言語による交渉と合意</b>：暗黙の効用、合意内容の意味の確定</li>
+    </ul>
+  </div>
+  <div class="box amb">主な発表の場：AAMAS、IJCAI、AAAI、NeurIPS、ICML、ICLR、ACM EC、PRIMA。論文誌：JAAMAS、AIJ、JAIR、Group Decision and Negotiation など。</div>
+  <p class="cite">Dafoe, A. et al. (2020). Open problems in cooperative AI. arXiv:2012.08630.</p>
+  <span class="num"></span>
+</section>
+
+<section class="slide adv">
+  <p class="sec">補足　参考文献<span class="adv-badge">発展</span></p>
+  <h2>参考文献</h2>
+  <ol class="refs">
+    <li>Wooldridge, M. (2009). <i>An Introduction to MultiAgent Systems</i> (2nd ed.). Wiley.</li>
+    <li>Shoham, Y. &amp; Leyton-Brown, K. (2009). <i>Multiagent Systems: Algorithmic, Game-Theoretic, and Logical Foundations</i>. Cambridge University Press.</li>
+    <li>Russell, S. &amp; Norvig, P. <i>Artificial Intelligence: A Modern Approach</i>. Pearson.</li>
+    <li>Wooldridge, M. &amp; Jennings, N. R. (1995). Intelligent agents: Theory and practice. <i>Knowledge Engineering Review</i>, 10(2).</li>
+    <li>Jennings, N. R., Sycara, K. &amp; Wooldridge, M. (1998). A roadmap of agent research and development. <i>JAAMAS</i>, 1(1).</li>
+    <li>Smith, R. G. (1980). The contract net protocol. <i>IEEE Trans. Computers</i>, C-29(12).</li>
+    <li>Rao, A. S. &amp; Georgeff, M. P. (1995). BDI agents: From theory to practice. <i>ICMAS</i>.</li>
+    <li>Shapley, L. S. (1953). Stochastic games. <i>PNAS</i>, 39(10).</li>
+    <li>Littman, M. L. (1994). Markov games as a framework for multi-agent reinforcement learning. <i>ICML</i>.</li>
+    <li>Bernstein, D. S. et al. (2002). The complexity of decentralized control of Markov decision processes. <i>Math. of Operations Research</i>, 27(4).</li>
+    <li>Braess, D. (1968). Über ein Paradoxon aus der Verkehrsplanung. <i>Unternehmensforschung</i>, 12.</li>
+    <li>Koutsoupias, E. &amp; Papadimitriou, C. (1999). Worst-case equilibria. <i>STACS</i>.</li>
+    <li>Roughgarden, T. &amp; Tardos, É. (2002). How bad is selfish routing? <i>Journal of the ACM</i>, 49(2).</li>
+    <li>Dafoe, A. et al. (2020). Open problems in cooperative AI. arXiv:2012.08630.</li>
+  </ol>
+  <span class="num"></span>
+</section>
+
+</div>
+<div class="notes" id="notes" aria-live="polite"></div>
+</div>
+<nav class="nav" aria-label="スライド操作">
+  <button class="arrow" id="prev" type="button" aria-label="前のスライド">‹</button>
+  <span class="count" id="count">1 / 1</span>
+  <button class="arrow" id="next" type="button" aria-label="次のスライド">›</button>
+  <button id="modeBtn" type="button" aria-pressed="true">表示：学部＋院</button>
+  <button id="noteBtn" type="button" aria-pressed="false">ノート（N）</button>
+  <button id="clockBtn" type="button">経過時間を開始</button>
+  <span class="clock" id="clock">0:00</span>
+</nav>
+</div>
+
+<script>
+// Warehouse multi-robot grid simulation
+function makeSim(opts){
+  var W=15,H=10;
+  var nR=opts.robots, strat=opts.strategy||{}, seed=opts.seed||7;
+  function rnd(){ seed=(seed*1103515245+12345)&0x7fffffff; return seed/0x7fffffff; }
+  function isShelf(x,y){ return (x%2===0) && y>=2 && y<=7; }
+  function isAisle(x,y){ return (x%2===1) && y>=2 && y<=7; }
+  function inb(x,y){ return x>=0&&x<W&&y>=0&&y<H; }
+  var exits=[[6,9],[7,9],[8,9]];
+  function isExit(x,y){ return y===9&&x>=6&&x<=8; }
+  function aisleDown(x){ return ((x-1)/2)%2===0; }
+  function allowed(fx,fy,tx,ty){
+    if(!inb(tx,ty)||isShelf(tx,ty)) return false;
+    if(!strat.oneway) return true;
+    var dx=tx-fx, dy=ty-fy;
+    if(isAisle(fx,fy)) return aisleDown(fx)? dy===1 : dy===-1;
+    if(isAisle(tx,ty)) return aisleDown(tx)? dy===1 : dy===-1;
+    if(dy!==0) return true; // vertical inside corridor pair
+    if(fy===0) return dx===1;
+    if(fy===1) return dx===-1;
+    if(fy===8) return dx===-1;
+    if(fy===9) return dx===1;
+    return true;
+  }
+  var D=[[1,0],[-1,0],[0,1],[0,-1]];
+  function bfs(sx,sy){
+    var dist=new Array(W*H).fill(-1), prev=new Array(W*H).fill(-1), q=[sx+sy*W];
+    dist[q[0]]=0;
+    for(var h=0;h<q.length;h++){ var c=q[h], x=c%W, y=(c-x)/W;
+      for(var k=0;k<4;k++){ var nx=x+D[k][0], ny=y+D[k][1];
+        if(!allowed(x,y,nx,ny)) continue; var n=nx+ny*W; if(dist[n]>=0) continue;
+        dist[n]=dist[c]+1; prev[n]=c; q.push(n); } }
+    return {dist:dist,prev:prev};
+  }
+  function firstStep(b,sx,sy,tx,ty){
+    var t=tx+ty*W; if(b.dist[t]<0) return null; var s=sx+sy*W; var c=t;
+    while(b.prev[c]!==s && b.prev[c]!==-1) c=b.prev[c];
+    if(c===s) return null; return [c%W,(c-c%W)/W];
+  }
+  // packages: fixed layout from seed
+  var cells=[]; for(var x=1;x<W;x+=2) for(var y=2;y<=7;y++) cells.push([x,y]);
+  var pk=[]; var s2=opts.pseed||11;
+  function r2(){ s2=(s2*1103515245+12345)&0x7fffffff; return s2/0x7fffffff; }
+  var nP=opts.packages||16, used={};
+  while(pk.length<nP){ var c=cells[Math.floor(r2()*cells.length)]; var key=c[0]+','+c[1]; if(used[key]) continue; used[key]=1; pk.push({x:c[0],y:c[1],alive:true,claim:-1}); }
+  // robots
+  var starts=[[7,8],[6,8],[8,8],[5,8],[9,8],[4,8],[10,8],[3,8],[11,8],[2,8],[12,8],[1,8]];
+  var robots=[]; for(var i=0;i<nR;i++) robots.push({x:starts[i][0],y:starts[i][1],carry:false,target:null,wait:0,zone:i});
+  var nAisles=7;
+  function zoneOf(px){ return Math.floor(((px-1)/2)*nR/nAisles); }
+  var st={tick:0,delivered:0,waits:0,retargets:0,done:false};
+  function occupied(x,y,self){ for(var j=0;j<robots.length;j++){ if(j!==self&&robots[j].x===x&&robots[j].y===y) return true;} return false; }
+  function choose(i){
+    var r=robots[i], b=bfs(r.x,r.y), best=null, bd=1e9, cand;
+    for(var pass=0;pass<2&&!best;pass++){
+      for(var k=0;k<pk.length;k++){ var p=pk[k]; if(!p.alive) continue;
+        if(strat.claim && p.claim!==-1 && p.claim!==i) continue;
+        if(strat.zone && pass===0 && zoneOf(p.x)!==r.zone) continue;
+        var d=b.dist[p.x+p.y*W]; if(d>=0&&d<bd){bd=d;best=k;} }
+      if(!strat.zone) break;
+    }
+    if(best!==null && strat.claim) pk[best].claim=i;
+    return best;
+  }
+  function step(){
+    if(st.done) return;
+    st.tick++;
+    for(var i=0;i<robots.length;i++){
+      var r=robots[i];
+      if(!r.carry){
+        if(r.target===null || !pk[r.target].alive){
+          if(r.target!==null) st.retargets++;
+          r.target=choose(i);
+          if(r.target===null){
+            // nothing to do: go park in the top corridor so as not to block others
+            var hx=[1,3,5,7,9,11,13,2,4,6,8,10,12][i%13], hy=0;
+            if(r.x===hx&&r.y===hy) continue;
+            var bb=bfs(r.x,r.y), nn=firstStep(bb,r.x,r.y,hx,hy);
+            if(nn&&!occupied(nn[0],nn[1],i)){ r.x=nn[0]; r.y=nn[1]; }
+            else if(nn){ r.wait++; if(r.wait>3){ var o3=[]; for(var k=0;k<4;k++){ var nx=r.x+D[k][0], ny=r.y+D[k][1]; if(allowed(r.x,r.y,nx,ny)&&!occupied(nx,ny,i)) o3.push([nx,ny]); } if(o3.length&&rnd()<0.5){ var o=o3[Math.floor(rnd()*o3.length)]; r.x=o[0]; r.y=o[1]; r.wait=0; } } }
+            continue;
+          }
+        }
+        var p=pk[r.target];
+        if(r.x===p.x&&r.y===p.y){ p.alive=false; r.carry=true; r.target=null; continue; }
+        var b=bfs(r.x,r.y), ns=firstStep(b,r.x,r.y,p.x,p.y);
+      } else {
+        if(isExit(r.x,r.y)){ r.carry=false; st.delivered++; continue; }
+        var b=bfs(r.x,r.y), bd=1e9, ex=null;
+        for(var e=0;e<3;e++){ var d=b.dist[exits[e][0]+exits[e][1]*W]; if(d>=0&&d<bd&&!(occupied(exits[e][0],exits[e][1],i)&&d>1)){bd=d;ex=exits[e];} }
+        if(!ex) ex=exits[1];
+        var ns=firstStep(b,r.x,r.y,ex[0],ex[1]);
+      }
+      if(!ns) continue;
+      if(occupied(ns[0],ns[1],i)){
+        r.wait++; st.waits++;
+        if(r.wait>3){
+          var opts2=[]; for(var k=0;k<4;k++){ var nx=r.x+D[k][0], ny=r.y+D[k][1]; if(allowed(r.x,r.y,nx,ny)&&!occupied(nx,ny,i)) opts2.push([nx,ny]); }
+          if(opts2.length&&rnd()<0.5){ var o=opts2[Math.floor(rnd()*opts2.length)]; r.x=o[0]; r.y=o[1]; r.wait=0; }
+        }
+      } else { r.x=ns[0]; r.y=ns[1]; r.wait=0; }
+    }
+    if(st.delivered===pk.length) st.done=true;
+  }
+  return {W:W,H:H,robots:robots,pk:pk,st:st,step:step,isShelf:isShelf,isExit:isExit,isAisle:isAisle,aisleDown:aisleDown};
+}
+if(typeof module!=='undefined') module.exports=makeSim;
+
+(function(){
+  var slides=Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var stage=document.getElementById('stage'), vp=document.getElementById('vp'), notes=document.getElementById('notes');
+  var full=true, order=[], pos=0;
+  function buildOrder(){
+    order=[]; slides.forEach(function(s,i){ if(full||!s.classList.contains('adv')) order.push(i); });
+    order.forEach(function(si,k){ var n=slides[si].querySelector('.num'); if(n) n.textContent=(k+1)+' / '+order.length; });
+  }
+  function fit(){
+    var w=vp.clientWidth,h=vp.clientHeight,pad=w<700?8:24;
+    var s=Math.min((w-pad*2)/1280,(h-pad*2)/720);
+    stage.style.transform='scale('+s+')'; stage.style.left=((w-1280*s)/2)+'px'; stage.style.top=((h-720*s)/2)+'px';
+  }
+  function current(){ return order[pos]; }
+  function show(){
+    var ci=current();
+    slides.forEach(function(s,k){ s.classList.toggle('active',k===ci); s.setAttribute('aria-hidden',k===ci?'false':'true'); });
+    document.getElementById('count').textContent=(pos+1)+' / '+order.length;
+    document.getElementById('prev').disabled=pos===0;
+    document.getElementById('next').disabled=pos===order.length-1;
+    document.getElementById('bar').style.width=((pos+1)/order.length*100)+'%';
+    var nt=slides[ci].getAttribute('data-note'); notes.textContent=nt?nt:'（このスライドのノートはありません）';
+    try{ history.replaceState(null,'','#'+(ci+1)); }catch(e){}
+  }
+  function go(p){ pos=Math.max(0,Math.min(order.length-1,p)); show(); }
+  function goSlide(si){ var k=order.indexOf(si); if(k<0){ k=0; for(var j=0;j<order.length;j++){ if(order[j]<=si) k=j; } } go(k); }
+  document.getElementById('prev').onclick=function(){ go(pos-1); };
+  document.getElementById('next').onclick=function(){ go(pos+1); };
+  document.getElementById('modeBtn').onclick=function(){
+    var ci=current(); full=!full; buildOrder();
+    this.textContent = full ? '表示：学部＋院' : '表示：学部のみ';
+    this.setAttribute('aria-pressed', full?'true':'false');
+    goSlide(ci);
+  };
+  function toggleNotes(){ var on=!document.body.classList.contains('show-notes'); document.body.classList.toggle('show-notes',on); document.getElementById('noteBtn').setAttribute('aria-pressed',on?'true':'false'); }
+  document.getElementById('noteBtn').onclick=toggleNotes;
+  document.addEventListener('keydown',function(e){
+    var tg=e.target&&e.target.tagName;
+    if((tg==='BUTTON'&&(e.key===' '||e.key==='Enter'))||tg==='INPUT') return;
+    if(['ArrowRight','PageDown',' '].indexOf(e.key)>-1){ e.preventDefault(); go(pos+1); }
+    else if(['ArrowLeft','PageUp'].indexOf(e.key)>-1){ e.preventDefault(); go(pos-1); }
+    else if(e.key==='Home') go(0); else if(e.key==='End') go(order.length-1);
+    else if(e.key==='n'||e.key==='N') toggleNotes();
+  });
+  var tx=null;
+  vp.addEventListener('touchstart',function(e){ if(e.target.tagName==='INPUT'){tx=null;return;} tx=e.touches[0].clientX; },{passive:true});
+  vp.addEventListener('touchend',function(e){ if(tx===null) return; var dx=e.changedTouches[0].clientX-tx; if(Math.abs(dx)>50) go(pos+(dx<0?1:-1)); tx=null; });
+
+  var cb=document.getElementById('clockBtn'), ck=document.getElementById('clock'), start=null, acc=0, tid=null;
+  function showClock(){ var s=Math.floor((acc+(start?Date.now()-start:0))/1000); ck.textContent=Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
+  cb.onclick=function(){ if(start){ acc+=Date.now()-start; start=null; clearInterval(tid); cb.textContent='経過時間を再開'; } else { start=Date.now(); tid=setInterval(showClock,1000); cb.textContent='一時停止'; } showClock(); };
+
+  Array.prototype.forEach.call(document.querySelectorAll('.cell,.qcard'),function(c){ c.addEventListener('click',function(){ c.classList.toggle('open'); }); });
+
+  var NS='http://www.w3.org/2000/svg';
+  function el(tag,a,p){ var e=document.createElementNS(NS,tag); for(var k in a) e.setAttribute(k,a[k]); if(p) p.appendChild(e); return e; }
+  function txt(x,y,s,size,p,fill,extra){ var a={x:x,y:y,'text-anchor':'middle','dominant-baseline':'central','font-size':size,fill:fill||'var(--ink)','font-weight':'700'}; for(var k in (extra||{})) a[k]=extra[k]; var t=el('text',a,p); t.textContent=s; return t; }
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var animators=[];
+
+  // cover network
+  (function(){
+    var svg=document.getElementById('coverNet');
+    var pts=[[80,60],[260,40],[370,150],[190,170],[60,290],[250,310],[380,380],[140,450],[320,500],[40,500]];
+    var ed=[[0,1],[0,3],[1,2],[1,3],[2,3],[3,4],[3,5],[2,6],[5,6],[4,5],[4,7],[5,7],[6,8],[7,8],[7,9],[5,8]];
+    var cols=['#3CC2BD','#8C9BF6','#EE6B98','#F0B43A'];
+    var lines=ed.map(function(){ return el('line',{stroke:'#EEF2F7','stroke-opacity':'.25','stroke-width':2},svg); });
+    var dots=pts.map(function(p,i){ return el('circle',{r:i%3===0?14:9,fill:cols[i%4]},svg); });
+    var ph=pts.map(function(){ return Math.random()*6.28; });
+    function draw(t){ var P=pts.map(function(p,i){ return [p[0]+Math.sin(t*.5+ph[i])*8, p[1]+Math.cos(t*.45+ph[i])*8]; });
+      dots.forEach(function(d,i){ d.setAttribute('cx',P[i][0]); d.setAttribute('cy',P[i][1]); });
+      lines.forEach(function(l,k){ var a=P[ed[k][0]],b=P[ed[k][1]]; l.setAttribute('x1',a[0]); l.setAttribute('y1',a[1]); l.setAttribute('x2',b[0]); l.setAttribute('y2',b[1]); }); }
+    draw(0); animators.push({slide:svg.closest('.slide'),fn:draw});
+  })();
+
+  if(!reduce){ var t0=performance.now(); (function tick(now){ var t=(now-t0)/1000, ci=current(); animators.forEach(function(a){ if(slides[ci]===a.slide) a.fn(t); }); requestAnimationFrame(tick); })(t0); }
+
+  // failure sim
+  (function(){
+    var houses=[]; for(var r=0;r<3;r++) for(var c=0;c<4;c++) houses.push({x:60+c*120,y:55+r*110,c:c,r:r});
+    var drones=[0,1,2,3].map(function(k){ return {x:60+k*120,y:110+(k%2)*110}; });
+    var robot={x:240,y:165};
+    function house(g,h,ok){ txt(h.x,h.y,'📦',32,g); el('circle',{cx:h.x+20,cy:h.y+18,r:11,fill:ok?'var(--ok)':'var(--eq)'},g); txt(h.x+20,h.y+18,ok?'✓':'✕',14,g,'#fff'); }
+    function render(state){
+      var L=document.getElementById('simL'), R=document.getElementById('simR'); L.innerHTML=''; R.innerHTML='';
+      var bl=state!=='ok', gl=el('g',{},L);
+      houses.forEach(function(h){ el('line',{x1:robot.x,y1:robot.y,x2:h.x,y2:h.y,stroke:bl?'var(--line)':'var(--acc)','stroke-width':2.5,'stroke-dasharray':bl?'6 6':'none'},gl); });
+      houses.forEach(function(h){ house(L,h,!bl); });
+      el('circle',{cx:robot.x,cy:robot.y,r:34,fill:'var(--paper)',stroke:bl?'var(--eq)':'var(--acc)','stroke-width':4},L); txt(robot.x,robot.y,'🤖',38,L);
+      if(bl) txt(robot.x,robot.y,'✕',66,L,'var(--eq)');
+      var rl=document.getElementById('resL'); rl.textContent=state==='ok'?'12か所を1台で：時間 12':state==='broken'?'作業が止まる：0／12か所':'引き受ける仲間がいない：0／12か所'; rl.style.color=bl?'var(--eq)':'var(--muted)';
+      var gr=el('g',{},R), miss=0;
+      houses.forEach(function(h){ var d=h.c; if(state!=='ok'&&h.c===1){ d=state==='help'?(h.r<2?0:2):-1; } var ok=d>=0; if(!ok) miss++;
+        if(ok) el('line',{x1:drones[d].x,y1:drones[d].y,x2:h.x,y2:h.y,stroke:(state==='help'&&h.c===1)?'var(--amb)':'var(--acc)','stroke-width':2.5},gr); house(R,h,ok); });
+      drones.forEach(function(dr,k){ var br=state!=='ok'&&k===1; el('circle',{cx:dr.x,cy:dr.y,r:22,fill:'var(--paper)',stroke:br?'var(--eq)':'var(--acc)','stroke-width':3},R); txt(dr.x,dr.y,'🤖',24,R); if(br) txt(dr.x,dr.y,'✕',48,R,'var(--eq)'); });
+      var rr=document.getElementById('resR'); rr.textContent=state==='ok'?'3か所ずつ並行して：時間 3':state==='broken'?'9／12か所。故障した台の3か所が残る':'情報を交換して再割当て：12／12か所、時間 4'; rr.style.color=miss?'var(--eq)':'var(--ok)';
+      Array.prototype.forEach.call(document.querySelectorAll('[data-s]'),function(b){ b.setAttribute('aria-pressed',b.dataset.s===state?'true':'false'); });
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('[data-s]'),function(b){ b.addEventListener('click',function(){ render(b.dataset.s); }); });
+    render('ok');
+  })();
+
+  // ---------- experience: shared reveal, picks, ideas ----------
+  Array.prototype.forEach.call(document.querySelectorAll('[data-reveal]'),function(bt){ bt.addEventListener('click',function(){ document.getElementById(bt.dataset.reveal).classList.remove('hidden'); bt.classList.add('hidden'); }); });
+  Array.prototype.forEach.call(document.querySelectorAll('.picks'),function(g){ Array.prototype.forEach.call(g.querySelectorAll('.pick'),function(p){ p.addEventListener('click',function(){ Array.prototype.forEach.call(g.querySelectorAll('.pick'),function(q){ q.classList.remove('sel'); }); p.classList.add('sel'); }); }); });
+  Array.prototype.forEach.call(document.querySelectorAll('.idea'),function(c){ c.addEventListener('click',function(){ c.classList.toggle('open'); }); });
+
+  // ---------- warehouse rendering ----------
+  var WC=40, CONF={packages:16,pseed:45,seed:29};
+  function colorOf(i,n){ return n===1? 'var(--acc)' : 'hsl('+Math.round(i*360/n)+',70%,48%)'; }
+  function drawBase(svg,sim,oneway){
+    svg.innerHTML='';
+    el('rect',{x:0,y:0,width:600,height:400,fill:'var(--floor)'},svg);
+    for(var y=0;y<sim.H;y++) for(var x=0;x<sim.W;x++){
+      if(sim.isShelf(x,y)) el('rect',{x:x*WC+3,y:y*WC+1,width:WC-6,height:WC-2,rx:3,fill:'var(--shelf)'},svg);
+      if(sim.isExit(x,y)) el('rect',{x:x*WC+1,y:y*WC+1,width:WC-2,height:WC-2,rx:4,fill:'var(--exit)'},svg);
+    }
+    txt(4.9*WC,9.5*WC,'出荷口▶',15,svg,'var(--muted)');
+    if(oneway){ for(var ax=1;ax<sim.W;ax+=2){ var dn=sim.aisleDown(ax); for(var ay=3;ay<=6;ay+=3){ txt(ax*WC+WC/2,ay*WC+WC/2,dn?'↓':'↑',20,svg,'var(--muted)'); } } }
+    return el('g',{},svg);
+  }
+  function drawDyn(g,sim){
+    g.innerHTML='';
+    sim.pk.forEach(function(p){ if(!p.alive) return; el('rect',{x:p.x*WC+10,y:p.y*WC+10,width:20,height:20,rx:3,fill:'#B0763A',stroke:'#7A4E22','stroke-width':1.5},g); });
+    sim.robots.forEach(function(r,i){ var cx=r.x*WC+WC/2, cy=r.y*WC+WC/2;
+      if(r.wait>0&&!sim.st.done) el('circle',{cx:cx,cy:cy,r:18,fill:'none',stroke:'var(--eq)','stroke-width':4},g);
+      el('circle',{cx:cx,cy:cy,r:13,fill:colorOf(i,sim.robots.length),stroke:'#fff','stroke-width':2},g);
+      if(r.carry) el('rect',{x:cx-6,y:cy-6,width:12,height:12,rx:2,fill:'#B0763A',stroke:'#fff','stroke-width':1.5},g); });
+  }
+  function Runner(svg,o,onTick,onDone){
+    var sim=makeSim(o), dyn=drawBase(svg,sim,o.strategy&&o.strategy.oneway), timer=null, speed=o.speed||15;
+    drawDyn(dyn,sim);
+    function loop(){ sim.step(); drawDyn(dyn,sim); if(onTick) onTick(sim); if(sim.st.done){ stop(); if(onDone) onDone(sim); } }
+    function start(){ if(timer||sim.st.done) return; timer=setInterval(loop,1000/speed); }
+    function stop(){ if(timer){ clearInterval(timer); timer=null; } }
+    function setSpeed(v){ speed=v; if(timer){ stop(); start(); } }
+    return {sim:sim,start:start,stop:stop,setSpeed:setSpeed};
+  }
+  function cfg(n,strategy,speed){ return {robots:n,packages:CONF.packages,pseed:CONF.pseed,seed:CONF.seed,strategy:strategy||{},speed:speed}; }
+
+  // race
+  var raceL,raceR,raceDone=0,raceFastOn=false;
+  function raceFin(){ raceDone++; if(raceDone===2){ var r=Math.round(raceL.sim.st.tick/raceR.sim.st.tick*10)/10; document.getElementById('raceMsg').innerHTML='10台は1台の約<b>'+r+'倍</b>の速さ。10倍にはならなかった。なぜか、説明してみよう。'; } }
+  function raceInit(){ raceDone=0; document.getElementById('raceMsg').textContent='';
+    raceL=Runner(document.getElementById('raceL'),cfg(1,{},raceFastOn?60:18),function(s){ document.getElementById('raceLt').textContent=s.st.tick; },raceFin);
+    raceR=Runner(document.getElementById('raceR'),cfg(10,{},raceFastOn?60:18),function(s){ document.getElementById('raceRt').textContent=s.st.tick; },raceFin);
+    document.getElementById('raceLt').textContent=0; document.getElementById('raceRt').textContent=0; }
+  raceInit();
+  document.getElementById('raceGo').onclick=function(){ if(raceL.sim.st.done&&raceR.sim.st.done) raceInit(); raceL.start(); raceR.start(); };
+  document.getElementById('raceFast').onclick=function(){ raceFastOn=!raceFastOn; raceL.setSpeed(raceFastOn?60:18); raceR.setSpeed(raceFastOn?60:18); this.setAttribute('aria-pressed',raceFastOn?'true':'false'); };
+
+  // slow motion
+  var slow;
+  function slowInit(){ slow=Runner(document.getElementById('slowSvg'),cfg(10,{},6),function(s){ document.getElementById('slowT').textContent=s.st.tick; }); document.getElementById('slowT').textContent=0; }
+  slowInit();
+  document.getElementById('slowGo').onclick=function(){ if(slow.sim.st.done) slowInit(); slow.start(); };
+  document.getElementById('slowPause').onclick=function(){ slow.stop(); };
+  (function(){ var s=makeSim(cfg(10,{})), t=0; while(!s.st.done&&t<3000){ s.step(); t++; } document.getElementById('slowRe').textContent=s.st.retargets; document.getElementById('slowWa').textContent=s.st.waits; document.getElementById('baseWait').textContent=s.st.waits; })();
+
+  // strategy lab
+  var labState={claim:false,zone:false,oneway:false}, lab=null;
+  function labStrategy(){ return {claim:labState.claim||labState.zone, zone:labState.zone, oneway:labState.oneway}; }
+  function labName(){ var n=[]; if(labState.claim) n.push('声'); if(labState.zone) n.push('担当'); if(labState.oneway) n.push('一方通行'); return n.length? n.join('＋') : '作戦なし'; }
+  function labInit(){ if(lab) lab.stop(); lab=Runner(document.getElementById('labSvg'),cfg(10,labStrategy(),18),function(s){ document.getElementById('labT').textContent=s.st.tick; },function(s){
+      var tb=document.getElementById('labHist'), tr=document.createElement('tr'); tr.innerHTML='<td>10台、'+labName()+'</td><td>'+s.st.tick+'</td><td>'+s.st.waits+'</td>'; tb.appendChild(tr);
+      var best=null,bv=1e9; Array.prototype.forEach.call(tb.querySelectorAll('tr'),function(r){ r.classList.remove('best'); var v=+r.children[1].textContent; if(v<bv){bv=v;best=r;} }); if(best) best.classList.add('best'); });
+    document.getElementById('labT').textContent=0; }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-st]'),function(bt){ bt.addEventListener('click',function(){ labState[bt.dataset.st]=!labState[bt.dataset.st]; bt.setAttribute('aria-pressed',labState[bt.dataset.st]?'true':'false'); labInit(); }); });
+  labInit();
+  document.getElementById('labGo').onclick=function(){ if(lab.sim.st.done) labInit(); lab.start(); };
+
+  // class route game
+  var nC=document.getElementById('nClass'), kS=document.getElementById('kShort'), round=0;
+  function clampK(){ var n=Math.max(2,Math.min(300,+nC.value||30)); nC.value=n; var k=Math.max(0,Math.min(n,+kS.value||0)); kS.value=k; return [n,k]; }
+  function drawPeople(n,k){ var g=document.getElementById('routePeople'); g.innerHTML='';
+    var pa=el('path',{d:'M60,165 C160,40 420,40 520,165'}), pb=el('path',{d:'M60,165 C160,290 420,290 520,165'}), La=pa.getTotalLength(), Lb=pb.getTotalLength();
+    var ma=Math.min(k,40), mb=Math.min(n-k,40);
+    for(var i=0;i<ma;i++){ var p=pa.getPointAtLength(La*(i+0.5)/Math.max(ma,1)); el('circle',{cx:p.x,cy:p.y,r:5.5,fill:'var(--ink)'},g); }
+    for(var j=0;j<mb;j++){ var q=pb.getPointAtLength(Lb*(j+0.5)/Math.max(mb,1)); el('circle',{cx:q.x,cy:q.y,r:5.5,fill:'var(--ink)'},g); } }
+  function upd(){ var v=clampK(); drawPeople(v[0],v[1]); document.getElementById('routeOut').classList.add('hidden'); }
+  document.getElementById('kMinus').onclick=function(){ kS.value=(+kS.value||0)-1; upd(); };
+  document.getElementById('kPlus').onclick=function(){ kS.value=(+kS.value||0)+1; upd(); };
+  nC.addEventListener('input',upd); kS.addEventListener('input',upd); upd();
+  document.getElementById('routeGo').onclick=function(){ var v=clampK(), n=v[0], k=v[1], ts=Math.round(k*60/n), avg=Math.round((k*(k*60/n)+(n-k)*60)/n*10)/10;
+    document.getElementById('routeOut').classList.remove('hidden');
+    document.getElementById('rS').textContent=ts+'分'; document.getElementById('rA').textContent=avg+'分';
+    var m; if(k===n) m='全員が近道で、近道も60分。一人だけ大通りに移っても60分で、得をしない。'; else if(ts<60) m='近道の方が <b>'+(60-ts)+'分</b> 早い。大通りを選んだ人は、次は近道にする？'; else m='近道と大通りが同じ。';
+    document.getElementById('rMsg').innerHTML=m;
+    round++; var tr=document.createElement('tr'); tr.innerHTML='<td>'+round+'</td><td>'+k+'人</td><td>'+ts+'分</td><td>60分</td><td>'+avg+'分</td>'; document.getElementById('routeHist').appendChild(tr); };
+
+  // Braess
+  (function(){
+    var svg=document.getElementById('braessSvg');
+    var S=[60,190],A=[300,60],B=[300,320],E=[540,190];
+    var eSA=el('line',{x1:S[0],y1:S[1],x2:A[0],y2:A[1],'stroke-linecap':'round'},svg);
+    var eAE=el('line',{x1:A[0],y1:A[1],x2:E[0],y2:E[1],'stroke-linecap':'round'},svg);
+    var eSB=el('line',{x1:S[0],y1:S[1],x2:B[0],y2:B[1],'stroke-linecap':'round'},svg);
+    var eBE=el('line',{x1:B[0],y1:B[1],x2:E[0],y2:E[1],'stroke-linecap':'round'},svg);
+    var eAB=el('line',{x1:A[0],y1:A[1],x2:B[0],y2:B[1],'stroke-linecap':'round'},svg);
+    var it={'font-family':'"STIX Two Text",serif','font-style':'italic','font-weight':'400'};
+    txt(150,100,'x / 100 分',19,svg,null,it); txt(450,100,'45 分',19,svg,null,it); txt(150,290,'45 分',19,svg,null,it); txt(450,290,'x / 100 分',19,svg,null,it);
+    var abL=txt(345,190,'0 分',19,svg,'var(--eq)',it);
+    [[S,'S'],[A,'A'],[B,'B'],[E,'E']].forEach(function(n){ el('circle',{cx:n[0][0],cy:n[0][1],r:26,fill:'var(--ink)'},svg); txt(n[0][0],n[0][1],n[1],22,svg,'var(--paper)'); });
+    function w(f){ return 3+f/4000*14; }
+    function render(state){
+      var fSAE=2000,fSBE=2000,fX=0; if(state==='eq'){ fSAE=0; fSBE=0; fX=4000; }
+      var xSA=fSAE+fX, xBE=fSBE+fX, tSAE=xSA/100+45, tSBE=45+xBE/100, tX=xSA/100+xBE/100;
+      [[eSA,xSA],[eAE,fSAE],[eSB,fSBE],[eBE,xBE],[eAB,fX]].forEach(function(p){ p[0].setAttribute('stroke',p[1]>0?'var(--acc)':'var(--line)'); p[0].setAttribute('stroke-width',w(p[1])); p[0].removeAttribute('stroke-dasharray'); });
+      if(state==='base'){ eAB.setAttribute('stroke-dasharray','2 10'); abL.setAttribute('opacity','.25'); }
+      else { abL.setAttribute('opacity','1'); eAB.setAttribute('stroke','var(--eq)'); if(fX===0){ eAB.setAttribute('stroke-width',3); eAB.setAttribute('stroke-dasharray','8 8'); } }
+      var rows=[['S → A → E',fSAE,tSAE],['S → B → E',fSBE,tSBE]]; if(state!=='base') rows.push(['S → A → B → E',fX,tX]);
+      document.getElementById('flowBody').innerHTML=rows.map(function(r){ return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+' 分</td></tr>'; }).join('');
+      document.getElementById('bAvg').textContent=((fSAE*tSAE+fSBE*tSBE+fX*tX)/4000)+' 分';
+      document.getElementById('bNote').textContent={
+        base:'2経路に2000台ずつ。どちらも 20 + 45 = 65 分。どちらに移っても遅くなるので均衡。',
+        eq:'近道経由なら最大でも 40 + 0 + 40 分なので、全員にとって近道が最善になる。結果は全員 80 分。ここから外れると 85 分になるので、誰も戻らない。',
+        opt:'中央の計画者が近道を禁じれば 65 分のまま。近道の追加で、均衡は 65 分から 80 分に悪化した。'
+      }[state];
+      Array.prototype.forEach.call(document.querySelectorAll('[data-b]'),function(b){ b.setAttribute('aria-pressed',b.dataset.b===state?'true':'false'); });
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('[data-b]'),function(b){ b.addEventListener('click',function(){ render(b.dataset.b); }); });
+    render('base');
+  })();
+
+  buildOrder();
+  window.addEventListener('resize',fit); fit();
+  var h=parseInt((location.hash||'').slice(1),10); goSlide(isNaN(h)?0:Math.max(0,h-1));
+})();
+</script>
+</body>
+</html>
